@@ -314,7 +314,7 @@ class multilevel_solver:
         return LinearOperator(shape, matvec, dtype=dtype)
 
     def solve(self, b, x0=None, tol=1e-5, maxiter=100, cycle='V', accel=None,
-              callback=None, residuals=None, return_residuals=False):
+              callback=None, residuals=None, return_residuals=False, cyclesPerLevel=1):
         """Main solution call to execute multigrid cycling.
 
         Parameters
@@ -340,6 +340,8 @@ class multilevel_solver:
             called as callback(xk) where xk is the k-th iterate vector.
         residuals : list
             List to contain residual norms at each iteration.
+        cyclesPerLevel: int
+            number of V-cycles on each level for an F-cycle
 
         Returns
         -------
@@ -461,7 +463,7 @@ class multilevel_solver:
                 # hierarchy has only 1 level
                 x = self.coarse_solver(A, b)
             else:
-                self.__solve(0, x, b, cycle)
+                self._solve(0, x, b, cycle, cyclesPerLevel)
 
             residuals.append(residual_norm(A, x, b))
 
@@ -475,7 +477,7 @@ class multilevel_solver:
         else:
             return x
 
-    def __solve(self, lvl, x, b, cycle):
+    def _solve(self, lvl, x, b, cycle, cyclesPerLevel):
         """
         Parameters
         ----------
@@ -492,6 +494,7 @@ class multilevel_solver:
             cycle = 'W',    W-cycle
             cycle = 'F',    F-cycle
             cycle = 'AMLI', AMLI-cycle
+        cyclesPerLevel: number of V-cycles on each level for an F-cycle
         """
 
         A = self.levels[lvl].A
@@ -507,13 +510,15 @@ class multilevel_solver:
             coarse_x[:] = self.coarse_solver(self.levels[-1].A, coarse_b)
         else:
             if cycle == 'V':
-                self.__solve(lvl + 1, coarse_x, coarse_b, 'V')
+                self._solve(lvl + 1, coarse_x, coarse_b, 'V', cyclesPerLevel)
             elif cycle == 'W':
-                self.__solve(lvl + 1, coarse_x, coarse_b, cycle)
-                self.__solve(lvl + 1, coarse_x, coarse_b, cycle)
+                self._solve(lvl + 1, coarse_x, coarse_b, cycle, cyclesPerLevel)
+                self._solve(lvl + 1, coarse_x, coarse_b, cycle, cyclesPerLevel)
             elif cycle == 'F':
-                self.__solve(lvl + 1, coarse_x, coarse_b, cycle)
-                self.__solve(lvl + 1, coarse_x, coarse_b, 'V')
+                self._solve(lvl + 1, coarse_x, coarse_b, cycle, cyclesPerLevel)
+                if lvl != 0:
+                    for cycle_cnt in range(cyclesPerLevel):
+                        self._solve(lvl + 1, coarse_x, coarse_b, 'V', cyclesPerLevel)
             elif cycle == "AMLI":
                 # Run nAMLI AMLI cycles, which compute "optimal" corrections by
                 # orthogonalizing the coarse-grid corrections in the A-norm
@@ -524,8 +529,8 @@ class multilevel_solver:
                 for k in range(nAMLI):
                     # New search direction --> M^{-1}*residual
                     p[k, :] = 1
-                    self.__solve(lvl + 1, p[k, :].reshape(coarse_b.shape),
-                                 coarse_b, cycle)
+                    self._solve(lvl + 1, p[k, :].reshape(coarse_b.shape),
+                                 coarse_b, cycle, cyclesPerLevel)
 
                     # Orthogonalize new search direction to old directions
                     for j in range(k):  # loops from j = 0...(k-1)

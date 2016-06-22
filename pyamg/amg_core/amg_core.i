@@ -77,7 +77,8 @@
     (      ctype  R [], const int  R_size),
     (      ctype temp [], const int temp_size),
     (      ctype gamma [], const int gamma_size),
-    (const ctype omega [], const int omega_size)
+    (const ctype omega [], const int omega_size),
+    (const ctype X [], const int X_size)
 };
 %enddef
 
@@ -174,6 +175,7 @@ INSTANTIATE_INDEXDATA_COMPLEX(apply_givens)
 INSTANTIATE_INDEXDATA_COMPLEX(gauss_seidel)
 INSTANTIATE_INDEXDATA_COMPLEX(bsr_gauss_seidel)
 INSTANTIATE_INDEXDATA_COMPLEX(jacobi)
+INSTANTIATE_INDEXDATA_COMPLEX(boundary_relaxation)
 INSTANTIATE_INDEXDATA_COMPLEX(bsr_jacobi)
 INSTANTIATE_INDEXDATA_COMPLEX(gauss_seidel_indexed)
 INSTANTIATE_INDEXDATA_COMPLEX(jacobi_ne)
@@ -216,6 +218,10 @@ INSTANTIATE_INDEX_ONLY(rs_cf_splitting)
 INSTANTIATE_INDEX_ONLY(cljp_naive_splitting)
 INSTANTIATE_INDEX_ONLY(rs_direct_interpolation_pass1)
 INSTANTIATE_INDEXDATA(rs_direct_interpolation_pass2)
+INSTANTIATE_INDEX_ONLY(rs_standard_interpolation_pass1)
+INSTANTIATE_INDEXDATA(rs_standard_interpolation_pass2)
+INSTANTIATE_INDEX_ONLY(rs_boundary_smoothing_interpolation_pass1)
+INSTANTIATE_INDEXDATA(rs_boundary_smoothing_interpolation_pass2)
 INSTANTIATE_INDEXDATA(cr_helper)
 
 /*----------------------------------------------------------------------------

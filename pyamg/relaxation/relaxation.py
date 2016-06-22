@@ -426,6 +426,44 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
                                 x, b, temp, row_start, row_stop,
                                 row_step, R, omega)
 
+def boundary_relaxation(A, x, b, iterations=1, omega=1.0):
+    """Perform boundary relaxation iteration on the linear system Ax=b
+
+    Parameters
+    ----------
+    A : csr_matrix
+        Sparse NxN matrix
+    x : ndarray
+        Approximate solution (length N)
+    b : ndarray
+        Right-hand side (length N)
+    iterations : int
+        Number of iterations to perform
+    omega : scalar
+        Damping parameter
+
+    Returns
+    -------
+    Nothing, x will be modified in place.
+
+    """
+    A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
+
+    sweep = slice(None)
+    (row_start, row_stop, row_step) = sweep.indices(A.shape[0])
+
+    if (row_stop - row_start) * row_step <= 0:  # no work to do
+        return
+
+    # Create uniform type, convert possibly complex scalars to length 1 arrays
+    [omega] = type_prep(A.dtype, [omega])
+
+    if sparse.isspmatrix_csr(A):
+        for iter in range(iterations):
+            amg_core.boundary_relaxation(A.indptr, A.indices, A.data, x, b,
+                            row_start, row_stop, row_step)
+    else:
+        raise ValueError('A must be in CSR format to do boundary relaxation')
 
 def block_jacobi(A, x, b, Dinv=None, blocksize=1, iterations=1, omega=1.0):
     """Perform block Jacobi iteration on the linear system Ax=b

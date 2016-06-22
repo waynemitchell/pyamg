@@ -5,6 +5,7 @@ __docformat__ = "restructuredtext en"
 
 from warnings import warn
 from scipy.sparse import csr_matrix, isspmatrix_csr, SparseEfficiencyWarning
+import numpy
 
 from pyamg.multilevel import multilevel_solver
 from pyamg.relaxation.smoothing import change_smoothers
@@ -13,8 +14,10 @@ from pyamg.strength import classical_strength_of_connection, \
     distance_strength_of_connection, energy_based_strength_of_connection,\
     algebraic_distance, affinity_distance
 
-from .interpolate import direct_interpolation
+from .interpolate import direct_interpolation, \
+    standard_interpolation, boundary_smoothing_interpolation
 from . import split
+from pyamg.vis.vis_coarse import vis_splitting
 
 __all__ = ['ruge_stuben_solver']
 
@@ -22,9 +25,10 @@ __all__ = ['ruge_stuben_solver']
 def ruge_stuben_solver(A,
                        strength=('classical', {'theta': 0.25}),
                        CF='RS',
+                       interp='standard',
                        presmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        postsmoother=('gauss_seidel', {'sweep': 'symmetric'}),
-                       max_levels=10, max_coarse=500, keep=False, **kwargs):
+                       max_levels=10, max_coarse=500, keep=False, verts=None, **kwargs):
     """Create a multilevel solver using Classical AMG (Ruge-Stuben AMG)
 
     Parameters
@@ -54,6 +58,8 @@ def ruge_stuben_solver(A,
         Flag to indicate keeping extra operators in the hierarchy for
         diagnostics.  For example, if True, then strength of connection (C) and
         tentative prolongation (T) are kept.
+    verts: array of tuples
+        If non-trivial values passed in, the C/F splitting on each level will be saved to a file.
 
     Returns
     -------
@@ -107,9 +113,13 @@ def ruge_stuben_solver(A,
         raise ValueError('expected square matrix')
 
     levels[-1].A = A
+    if verts is None:
+        levels[-1].verts = numpy.zeros(1)
+    else:
+        levels[-1].verts = verts
 
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
-        extend_hierarchy(levels, strength, CF, keep)
+        extend_hierarchy(levels, strength, CF, interp, keep)
 
     ml = multilevel_solver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
@@ -117,7 +127,7 @@ def ruge_stuben_solver(A,
 
 
 # internal function
-def extend_hierarchy(levels, strength, CF, keep):
+def extend_hierarchy(levels, strength, CF, interp, keep):
     """ helper function for local methods """
     def unpack_arg(v):
         if isinstance(v, tuple):
@@ -126,6 +136,7 @@ def extend_hierarchy(levels, strength, CF, keep):
             return v, {}
 
     A = levels[-1].A
+    verts = levels[-1].verts
 
     # Compute the strength-of-connection matrix C, where larger
     # C[i,j] denote stronger couplings between i and j.
@@ -167,7 +178,15 @@ def extend_hierarchy(levels, strength, CF, keep):
 
     # Generate the interpolation matrix that maps from the coarse-grid to the
     # fine-grid
-    P = direct_interpolation(A, C, splitting)
+    fn, kwargs = unpack_arg(interp)
+    if fn == 'standard':
+        P = standard_interpolation(A, C, splitting)
+    elif fn == 'direct':
+        P = direct_interpolation(A, C, splitting)
+    elif fn == 'boundary_smoothing':
+        P = boundary_smoothing_interpolation(A, C, splitting)
+    else:
+        raise ValueError('unknown interpolation method (%s)' % interp)
 
     # Generate the restriction matrix that maps from the fine-grid to the
     # coarse-grid
@@ -186,3 +205,17 @@ def extend_hierarchy(levels, strength, CF, keep):
     # Form next level through Galerkin product
     A = R * A * P
     levels[-1].A = A
+
+    # If called for, output a visualization of the C/F splitting
+    if (verts.any()):
+        filename = 'cf_' + str(len(levels)-1) + '.vtu'
+        vis_splitting(verts, splitting, fname=filename)
+        new_verts = numpy.empty([P.shape[1], 2])
+        cnt = 0
+        for i in range(len(splitting)):
+            if (splitting[i]):
+                new_verts[cnt] = verts[i]
+                cnt = cnt + 1
+        levels[-1].verts = new_verts
+    else:
+        levels[-1].verts = numpy.zeros(1)
