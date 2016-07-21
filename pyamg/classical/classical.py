@@ -17,7 +17,6 @@ from pyamg.strength import classical_strength_of_connection, \
 from .interpolate import direct_interpolation, \
     standard_interpolation, boundary_smoothing_interpolation
 from . import split
-from pyamg.vis.vis_coarse import vis_splitting
 
 __all__ = ['ruge_stuben_solver']
 
@@ -208,8 +207,6 @@ def extend_hierarchy(levels, strength, CF, interp, keep):
 
     # If called for, output a visualization of the C/F splitting
     if (verts.any()):
-        filename = 'cf_' + str(len(levels)-1) + '.vtu'
-        vis_splitting(verts, splitting, fname=filename)
         new_verts = numpy.empty([P.shape[1], 2])
         cnt = 0
         for i in range(len(splitting)):

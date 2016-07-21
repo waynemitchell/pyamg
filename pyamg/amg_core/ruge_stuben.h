@@ -134,6 +134,7 @@ void maximum_row_value(const I n_row,
 #define F_NODE 0
 #define C_NODE 1
 #define U_NODE 2
+#define PRE_F_NODE 3
 
 /*
  * Compute a C/F (coarse-fine( splitting using the classical coarse grid
@@ -209,29 +210,65 @@ void rs_cf_splitting(const I n_nodes,
         I i        = index_to_node[top_index];
         I lambda_i = lambda[i];
 
-        //if (n_nodes == 4)
-        //    std::cout << "selecting node #" << i << " with lambda " << lambda[i] << std::endl;
+        // if (i == 73)
+        // {
+        //   std::cout << "LOOK HERE: i = 73, top_index = " << top_index << std::endl;
+        //   for (I j = n_nodes - 1; j > -1; j--)
+        //   {
+        //     std::cout << "             index: " << j << ", node: " << index_to_node[j] << ", lamda: " << lambda[index_to_node[j]] << std::endl;
+        //   }
+        // }
 
         //remove i from its interval
         interval_count[lambda_i]--;
 
         if(splitting[i] == F_NODE)
-        {
+        {        
+          // if (n_nodes == 121)
+            // std::cout << "Fine node #" << i << " with lambda " << lambda[i] << std::endl;
             continue;
         }
         else
         {
             assert(splitting[i] == U_NODE);
 
+            // Search over this interval to make sure we process nodes in descending node order
+            I max_node = i;
+            I max_index = top_index;
+            for (I j = interval_ptr[lambda_i]; j < interval_ptr[lambda_i] + interval_count[lambda_i]; j++)
+            {
+              if (index_to_node[j] > max_node)
+              {
+                max_node = index_to_node[j];
+                max_index = j;
+              }
+            }
+
+            node_to_index[index_to_node[top_index]] = max_index;
+            node_to_index[index_to_node[max_index]] = top_index;
+
+
+            std::swap(index_to_node[top_index], index_to_node[max_index]);
+            i = index_to_node[top_index];
+
+
             splitting[i] = C_NODE;
+            // if (n_nodes == 121)
+              // std::cout << "Coarse node #" << i << " with lambda " << lambda[i] << std::endl;
 
             //For each j in S^T_i /\ U
-            for(I jj = Tp[i]; jj < Tp[i+1]; jj++){
+            for(I jj = Tp[i]; jj < Tp[i+1]; jj++)
+            {
                 I j = Tj[jj];
+                if(splitting[j] == U_NODE) splitting[j] = PRE_F_NODE;
+            }
 
-                if(splitting[j] == U_NODE){
+            for(I jj = Tp[i]; jj < Tp[i+1]; jj++)
+            {
+                I j = Tj[jj];
+                if(splitting[j] == PRE_F_NODE)
+                {
                     splitting[j] = F_NODE;
-
                     //For each k in S_j /\ U
                     for(I kk = Sp[j]; kk < Sp[j+1]; kk++){
                         I k = Sj[kk];
@@ -260,6 +297,9 @@ void rs_cf_splitting(const I n_nodes,
 
                             //increment lambda_k
                             lambda[k]++;
+                            // if (n_nodes == 121)
+                              // std::cout << "    increment node #" << k << " to lambda " << lambda[k] << std::endl;
+
                         }
                     }
                 }
@@ -290,6 +330,7 @@ void rs_cf_splitting(const I n_nodes,
 
                     //decrement lambda_j
                     lambda[j]--;
+                    std::cout << "    decrement node #" << j << " to lambda " << lambda[j] << std::endl;
                 }
             }
         }

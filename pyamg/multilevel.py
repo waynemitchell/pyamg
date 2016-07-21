@@ -6,6 +6,7 @@ from warnings import warn
 
 import scipy as sp
 import numpy as np
+from pyamg.vis.vis_coarse import vis_splitting
 
 
 __all__ = ['multilevel_solver', 'coarse_grid_solver']
@@ -40,6 +41,10 @@ class multilevel_solver:
         A measure of the size of the multigrid hierarchy.
     solve()
         Iteratively solves a linear system for the right hand side.
+    visualize_coarse_grids()
+        Dump a visualization of the coarse grids in the given directory.
+    save_operators()
+        Dump operators in desired format in the given directory.
     """
 
     class level:
@@ -59,6 +64,8 @@ class multilevel_solver:
             Restriction matrix between levels (often R = P.T)
         P : csr_matrix
             Prolongation or Interpolation matrix.
+        verts : n x 2 array
+            degree of freedom locations
 
         Notes
         -----
@@ -554,6 +561,75 @@ class multilevel_solver:
         x += self.levels[lvl].P * coarse_x   # coarse grid correction
 
         self.levels[lvl].postsmoother(A, x, b)
+
+    def visualize_coarse_grids(self, directory):
+        # Dump a visualization of the coarse grids in the given directory.
+        # If called for, output a visualization of the C/F splitting
+        if (self.levels[0].verts.any()):
+            for i in range(len(self.levels) - 1):
+                filename = directory + '/cf_' + str(i) + '.vtu'
+                vis_splitting(self.levels[i].verts, self.levels[i].splitting, fname=filename)
+        else:
+            print 'Cannot visulize coarse grids: missing dof locations or splittings in multilevel instance. \
+                Pass in parameters verts = [nx2 array of dof locations] and keep = True when creating multilevel instance.'
+        
+
+    def save_operators(self, directory, fmt):
+        # Dump operators in desired format in the given directory.
+        # Available formats are fmt = 'csr', 'coo', 'dense'
+        for i in range(len(self.levels)):
+            A = self.levels[i].A
+            if (i != len(self.levels) - 1):
+                P = self.levels[i].P
+                R = self.levels[i].R
+            if (fmt == 'csr'):
+                filename = directory + '/A' + str(i) + '_indptr.txt'
+                np.savetxt(filename, A.indptr, fmt='%d')
+                filename = directory + '/A' + str(i) + '_indices.txt'
+                np.savetxt(filename, A.indices, fmt='%d')
+                filename = directory + '/A' + str(i) + '_data.txt'
+                np.savetxt(filename, A.data)
+                if (i != len(self.levels) - 1):
+                    filename = directory + '/P' + str(i) + '_indptr.txt'
+                    np.savetxt(filename, P.indptr, fmt='%d')
+                    filename = directory + '/P' + str(i) + '_indices.txt'
+                    np.savetxt(filename, P.indices, fmt='%d')
+                    filename = directory + '/P' + str(i) + '_data.txt'
+                    np.savetxt(filename, P.data)
+                    filename = directory + '/R' + str(i) + '_indptr.txt'
+                    np.savetxt(filename, R.indptr, fmt='%d')
+                    filename = directory + '/R' + str(i) + '_indices.txt'
+                    np.savetxt(filename, R.indices, fmt='%d')
+                    filename = directory + '/R' + str(i) + '_data.txt'
+                    np.savetxt(filename, R.data)
+            elif (fmt == 'coo'):
+                filename = directory + '/A' + str(i) + '_row.txt'
+                np.savetxt(filename, (A.tocoo()).row, fmt='%d')
+                filename = directory + '/A' + str(i) + '_col.txt'
+                np.savetxt(filename, (A.tocoo()).col, fmt='%d')
+                filename = directory + '/A' + str(i) + '_data.txt'
+                np.savetxt(filename, (A.tocoo()).data)
+                if (i != len(self.levels) - 1):
+                    filename = directory + '/P' + str(i) + '_row.txt'
+                    np.savetxt(filename, (P.tocoo()).row, fmt='%d')
+                    filename = directory + '/P' + str(i) + '_col.txt'
+                    np.savetxt(filename, (P.tocoo()).col, fmt='%d')
+                    filename = directory + '/P' + str(i) + '_data.txt'
+                    np.savetxt(filename, (P.tocoo()).data)
+                    filename = directory + '/R' + str(i) + '_row.txt'
+                    np.savetxt(filename, (R.tocoo()).row, fmt='%d')
+                    filename = directory + '/R' + str(i) + '_col.txt'
+                    np.savetxt(filename, (R.tocoo()).col, fmt='%d')
+                    filename = directory + '/R' + str(i) + '_data.txt'
+                    np.savetxt(filename, (R.tocoo()).data)
+            elif (fmt == 'dense'):
+                filename = directory + '/A' + str(i) + '_dense.txt'
+                np.savetxt(filename, A.todense())
+                if (i != len(self.levels) - 1):
+                    filename = directory + '/P' + str(i) + '_dense.txt'
+                    np.savetxt(filename, P.todense())
+                    filename = directory + '/R' + str(i) + '_dense.txt'
+                    np.savetxt(filename, R.todense())
 
 
 def coarse_grid_solver(solver):
