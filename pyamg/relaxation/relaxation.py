@@ -426,7 +426,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
                                 x, b, temp, row_start, row_stop,
                                 row_step, R, omega)
 
-def boundary_relaxation(A, x, b, iterations=1, omega=1.0):
+def boundary_relaxation(A, x, b, iterations=1):
     """Perform boundary relaxation iteration on the linear system Ax=b
 
     Parameters
@@ -454,9 +454,6 @@ def boundary_relaxation(A, x, b, iterations=1, omega=1.0):
 
     if (row_stop - row_start) * row_step <= 0:  # no work to do
         return
-
-    # Create uniform type, convert possibly complex scalars to length 1 arrays
-    [omega] = type_prep(A.dtype, [omega])
 
     if sparse.isspmatrix_csr(A):
         for iter in range(iterations):

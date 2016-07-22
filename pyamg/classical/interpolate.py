@@ -168,10 +168,11 @@ def boundary_smoothing_interpolation(A, C, splitting):
     # Generate vector X to fit interpolation to
     zero_rhs = np.zeros(A.shape[0])
     X = np.ones_like(zero_rhs, dtype='float64')
-    boundary_relaxation(A, X, zero_rhs, iterations=2, omega=1.0)
+    boundary_relaxation(A, X, zero_rhs, iterations=2)
 
     # Debugging: print out X
-    # np.savetxt('/Users/mitchell82/Desktop/X.txt', X)
+    # filename = '/Users/mitchell82/Desktop/X' + str(A.shape[0]) + '.txt'
+    # np.savetxt(filename, X)
 
 
     amg_core.rs_boundary_smoothing_interpolation_pass2(A.shape[0],

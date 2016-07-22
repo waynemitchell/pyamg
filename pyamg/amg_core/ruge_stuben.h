@@ -828,7 +828,8 @@ void rs_boundary_smoothing_interpolation_pass2(const I n_nodes,
             // Start by summing entire row of A
             for(I mm = Ap[i]; mm < Ap[i+1]; mm++) denominator += Ax[mm];
             // If row sum is nonzero, mark for modified interpolation
-            if ( abs(denominator) > 0.00001 ) boundary_flag = true;
+            if ( std::abs(denominator) > 0.00001 ) boundary_flag = true;
+            else boundary_flag = false;
             // Then subtract off the strong connections so that you are left with 
             // denominator = a_ii + sum_{m in weak connections} a_im
             for(I mm = Sp[i]; mm < Sp[i+1]; mm++){

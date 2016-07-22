@@ -285,7 +285,7 @@ void boundary_relaxation(const I Ap[], const int Ap_size,
         }
 
         // Only perform relaxation if row sum is nonzero
-        if (abs(rsum) > 0.000001)
+        if (std::abs(rsum) > 0.000001)
         {
             rsum = 0;
             for(I jj = start; jj < end; jj++){
@@ -300,6 +300,7 @@ void boundary_relaxation(const I Ap[], const int Ap_size,
             if (diag != (F) 0.0){
                 x[i] = (b[i] - rsum)/diag;
             }
+            else printf("During relaxation, diagonal was zero!\n");
         }
     }
 }
