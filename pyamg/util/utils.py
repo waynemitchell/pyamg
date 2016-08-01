@@ -2230,3 +2230,33 @@ def truncate_rows(A, nz_per_row):
 #        return wrapped
 #
 #    return dispatcher
+
+
+# Get the square diagonal blocks of csr_matrix A
+# where the row start indices of the blocks are stored in block_starts
+def extract_diagonal_blocks(A, block_starts):
+
+    # Will return a list of csr matrices
+    A_diag = []
+
+    for block in range(len(block_starts) - 1):
+        data = []
+        indices = []
+        indptr = np.zeros(block_starts[block+1] - block_starts[block] + 1, dtype='int')
+        cnt = 0
+        for i in  range(block_starts[block], block_starts[block+1]):
+            diag_row_index = i - block_starts[block]
+            indptr[diag_row_index] = cnt
+            for jj in range(A.indptr[i], A.indptr[i+1]):
+                j = A.indices[jj]
+                if (j >= block_starts[block] and j < block_starts[block+1]):
+                    data.append( A.data[jj] )
+                    indices.append( j - block_starts[block] )
+                    cnt = cnt + 1
+        indptr[-1] = cnt
+        data = np.array(data)
+        indices = np.array(indices, dtype='int')
+        A_diag.append( csr_matrix((data, indices, indptr)) )
+
+
+    return A_diag
