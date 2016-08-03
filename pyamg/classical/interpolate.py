@@ -124,7 +124,7 @@ def standard_interpolation(A, C, splitting):
 
     return  csr_matrix((Px, Pj, Pp))
 
-def boundary_smoothing_interpolation(A, C, splitting):
+def boundary_smoothing_interpolation(A, C, splitting, b_zero):
     """Create prolongator using direct interpolation
 
     Parameters
@@ -136,6 +136,8 @@ def boundary_smoothing_interpolation(A, C, splitting):
         Must have zero diagonal
     splitting : array
         C/F splitting stored in an array of length N
+    b_zero : {np array}
+        Zero right hand side accounting for eliminated BC's used for boundary smoothing: Ax=b_zero
 
     Returns
     -------
@@ -166,13 +168,21 @@ def boundary_smoothing_interpolation(A, C, splitting):
     Px = np.empty(nnz, dtype=A.dtype)
 
     # Generate vector X to fit interpolation to
-    zero_rhs = np.zeros(A.shape[0])
-    X = np.ones_like(zero_rhs, dtype='float64')
-    boundary_relaxation(A, X, zero_rhs, iterations=2)
+    X = np.ones_like(b_zero, dtype='float64')
+    boundary_relaxation(A, X, b_zero, iterations=2)
 
-    # Debugging: print out X
-    # filename = '/Users/mitchell82/Desktop/X' + str(A.shape[0]) + '.txt'
-    # np.savetxt(filename, X)
+    # Debugging: show X
+    # import matplotlib.pyplot as plt
+    # from mpl_toolkits.mplot3d import Axes3D
+    # fig = plt.figure()
+    # ax = fig.gca(projection='3d')
+    # X_grid = np.arange( 0.0, 1.0, 1.0/np.sqrt(len(X)) )
+    # Y_grid = np.arange( 0.0, 1.0, 1.0/np.sqrt(len(X)) )
+    # X_grid, Y_grid = np.meshgrid(X_grid, Y_grid)
+    # ax.scatter( X_grid, Y_grid, X )
+    # plt.show()
+    filename = '/Users/mitchell82/Documents/research/famg/famgSISCPaper2016/matlab/matrices/X' + str(A.shape[0]) + '.txt'
+    np.savetxt(filename, X)
 
 
     amg_core.rs_boundary_smoothing_interpolation_pass2(A.shape[0],
