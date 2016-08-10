@@ -199,6 +199,8 @@ def extend_hierarchy(levels, strength, CF, interp, keep):
             splitting.append( split.CLJP(C_diag[-1]) )
         elif fn == 'CLJPc':
             splitting.append( split.CLJPc(C_diag[-1]) )
+        elif fn == 'Shifted2DCoarsening':
+            splitting.append( split.Shifted2DCoarsening(C_diag[-1]) )
         else:
             raise ValueError('unknown C/F splitting method (%s)' % CF)
 

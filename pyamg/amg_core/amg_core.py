@@ -263,6 +263,15 @@ def gauss_seidel(*args):
     """
     return _amg_core.gauss_seidel(*args)
 
+def f_relaxation(*args):
+    """
+    f_relaxation(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, int const [] splitting, int const row_start, int const row_stop, int const row_step)
+    f_relaxation(int const [] Ap, int const [] Aj, double const [] Ax, double [] x, double const [] b, int const [] splitting, int const row_start, int const row_stop, int const row_step)
+    f_relaxation(int const [] Ap, int const [] Aj, std::complex< float > const [] Ax, std::complex< float > [] x, std::complex< float > const [] b, int const [] splitting, int const row_start, int const row_stop, int const row_step)
+    f_relaxation(int const [] Ap, int const [] Aj, std::complex< double > const [] Ax, std::complex< double > [] x, std::complex< double > const [] b, int const [] splitting, int const row_start, int const row_stop, int const row_step)
+    """
+    return _amg_core.f_relaxation(*args)
+
 def bsr_gauss_seidel(*args):
     """
     bsr_gauss_seidel(int const [] Ap, int const [] Aj, float const [] Ax, float [] x, float const [] b, int const row_start, int const row_stop, int const row_step, int const blocksize)
@@ -458,6 +467,10 @@ def maximum_row_value(*args):
 def rs_cf_splitting(n_nodes, Sp, Sj, Tp, Tj, splitting):
     """rs_cf_splitting(int const n_nodes, int const [] Sp, int const [] Sj, int const [] Tp, int const [] Tj, int [] splitting)"""
     return _amg_core.rs_cf_splitting(n_nodes, Sp, Sj, Tp, Tj, splitting)
+
+def shifted_2d_coarsening(n_nodes, Sp, splitting):
+    """shifted_2d_coarsening(int const n_nodes, int const [] Sp, int [] splitting)"""
+    return _amg_core.shifted_2d_coarsening(n_nodes, Sp, splitting)
 
 def cljp_naive_splitting(n, Sp, Sj, Tp, Tj, splitting, colorflag):
     """cljp_naive_splitting(int const n, int const [] Sp, int const [] Sj, int const [] Tp, int const [] Tj, int [] splitting, int const colorflag)"""

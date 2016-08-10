@@ -353,6 +353,58 @@ def gauss_seidel(A, x, b, iterations=1, sweep='forward'):
             amg_core.bsr_gauss_seidel(A.indptr, A.indices, np.ravel(A.data),
                                       x, b, row_start, row_stop, row_step, R)
 
+def f_relaxation(A, x, b, splitting, iterations=1, sweep='forward'):
+    """Perform gauss-seidel f-relaxation iteration on the linear system Ax=b
+
+    Parameters
+    ----------
+    A : {csr_matrix, bsr_matrix}
+        Sparse NxN matrix
+    x : ndarray
+        Approximate solution (length N)
+    b : ndarray
+        Right-hand side (length N)
+    splitting : ndarray
+        CF splitting, 1 = C-pt, 0 = f-pt, relaxation is only performed on f-pts
+    iterations : int
+        Number of iterations to perform
+    sweep : {'forward','backward','symmetric'}
+        Direction of sweep
+
+    Returns
+    -------
+    Nothing, x will be modified in place.
+    """
+    A, x, b = make_system(A, x, b, formats=['csr'])
+
+    if sparse.isspmatrix_csr(A):
+        blocksize = 1
+    else:
+        R, C = A.blocksize
+        if R != C:
+            raise ValueError('BSR blocks must be square')
+        blocksize = R
+
+    if sweep == 'forward':
+        row_start, row_stop, row_step = 0, int(len(x)/blocksize), 1
+    elif sweep == 'backward':
+        row_start, row_stop, row_step = int(len(x)/blocksize)-1, -1, -1
+    elif sweep == 'symmetric':
+        for iter in range(iterations):
+            f_relaxation(A, x, b, splitting, iterations=1, sweep='forward')
+            f_relaxation(A, x, b, splitting, iterations=1, sweep='backward')
+        return
+    else:
+        raise ValueError("valid sweep directions are 'forward',\
+                          'backward', and 'symmetric'")
+
+    if sparse.isspmatrix_csr(A):
+        for iter in range(iterations):
+            amg_core.f_relaxation(A.indptr, A.indices, A.data, x, b, splitting,
+                                  row_start, row_stop, row_step)
+    else:
+        print "Expected csr matrix for f-relaxation"
+
 
 def jacobi(A, x, b, iterations=1, omega=1.0):
     """Perform Jacobi iteration on the linear system Ax=b
@@ -447,7 +499,7 @@ def boundary_relaxation(A, x, b, iterations=1):
     Nothing, x will be modified in place.
 
     """
-    A, x, b = make_system(A, x, b, formats=['csr', 'bsr'])
+    A, x, b = make_system(A, x, b, formats=['csr'])
 
     sweep = slice(None)
     (row_start, row_stop, row_step) = sweep.indices(A.shape[0])

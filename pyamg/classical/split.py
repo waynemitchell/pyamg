@@ -155,6 +155,52 @@ def RS(S):
 
     return splitting
 
+def Shifted2DCoarsening(S):
+    """Compute a C/F splitting for a uniform 2D problem that is a shifted version of RS coarsening on Poisson:
+
+    C - f - C - f - C
+    f - f - f - f - f
+    C - f - C - f - C
+    f - f - f - f - f
+    C - f - C - f - C
+
+    Note: acceptable grid sizes are nxn elements where n = 2^i + 2 for some i
+
+    Parameters
+    ----------
+    S : csr_matrix
+        Strength of connection matrix indicating the strength between nodes i
+        and j (S_ij)
+
+    Returns
+    -------
+    splitting : ndarray
+        Array of length of S of ones (coarse) and zeros (fine)
+
+    Examples
+    --------
+    >>> from pyamg.gallery import poisson
+    >>> from pyamg.classical import RS
+    >>> S = poisson((10,10), format='csr') # 1D mesh with 7 vertices
+    >>> splitting = Shifted2DCoarsening(S)
+
+    See Also
+    --------
+    amg_core.shifted_2d_coarsening
+
+
+    """
+    if not isspmatrix_csr(S):
+        raise TypeError('expected csr_matrix')
+
+    splitting = np.empty(S.shape[0], dtype='intc')
+
+    amg_core.shifted_2d_coarsening(S.shape[0],
+                             S.indptr,
+                             splitting)
+
+    return splitting
+
 
 def PMIS(S):
     """C/F splitting using the Parallel Modified Independent Set method

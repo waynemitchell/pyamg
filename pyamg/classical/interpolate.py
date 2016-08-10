@@ -169,7 +169,7 @@ def boundary_smoothing_interpolation(A, C, splitting, b_zero):
 
     # Generate vector X to fit interpolation to
     X = np.ones_like(b_zero, dtype='float64')
-    boundary_relaxation(A, X, b_zero, iterations=2)
+    boundary_relaxation(A, X, b_zero, iterations=200)
 
     # Debugging: show X
     # import matplotlib.pyplot as plt
@@ -181,8 +181,8 @@ def boundary_smoothing_interpolation(A, C, splitting, b_zero):
     # X_grid, Y_grid = np.meshgrid(X_grid, Y_grid)
     # ax.scatter( X_grid, Y_grid, X )
     # plt.show()
-    # filename = '/Users/mitchell82/Documents/research/famg/famgSISCPaper2016/matlab/matrices/X' + str(A.shape[0]) + '.txt'
-    # np.savetxt(filename, X)
+    filename = '/Users/mitchell82/Documents/research/famg/famgSISCPaper2016/matlab/matrices/X' + str(A.shape[0]) + '.txt'
+    np.savetxt(filename, X)
 
 
     amg_core.rs_boundary_smoothing_interpolation_pass2(A.shape[0],

@@ -7,6 +7,7 @@ from warnings import warn
 import scipy as sp
 import numpy as np
 from pyamg.vis.vis_coarse import vis_splitting
+from pyamg.relaxation.relaxation import boundary_relaxation, f_relaxation
 
 
 __all__ = ['multilevel_solver', 'coarse_grid_solver']
@@ -500,13 +501,15 @@ class multilevel_solver:
             cycle = 'V',    V-cycle
             cycle = 'W',    W-cycle
             cycle = 'F',    F-cycle
+            cycle = 'FAMG', FAMG-cycle
             cycle = 'AMLI', AMLI-cycle
-        cyclesPerLevel: number of V-cycles on each level for an F-cycle
+        cyclesPerLevel: number of V-cycles on each level for an FAMG cycle
         """
 
         A = self.levels[lvl].A
 
-        self.levels[lvl].presmoother(A, x, b)
+        if (cycle != 'FAMG'):
+            self.levels[lvl].presmoother(A, x, b)
 
         residual = b - A * x
 
@@ -523,9 +526,9 @@ class multilevel_solver:
                 self._solve(lvl + 1, coarse_x, coarse_b, cycle, cyclesPerLevel)
             elif cycle == 'F':
                 self._solve(lvl + 1, coarse_x, coarse_b, cycle, cyclesPerLevel)
-                if lvl != 0:
-                    for cycle_cnt in range(cyclesPerLevel):
-                        self._solve(lvl + 1, coarse_x, coarse_b, 'V', cyclesPerLevel)
+                self._solve(lvl + 1, coarse_x, coarse_b, 'V', cyclesPerLevel)
+            elif cycle == 'FAMG':
+                self._solve(lvl + 1, coarse_x, coarse_b, cycle, cyclesPerLevel)
             elif cycle == "AMLI":
                 # Run nAMLI AMLI cycles, which compute "optimal" corrections by
                 # orthogonalizing the coarse-grid corrections in the A-norm
@@ -558,9 +561,16 @@ class multilevel_solver:
             else:
                 raise TypeError('Unrecognized cycle type (%s)' % cycle)
 
-        x += self.levels[lvl].P * coarse_x   # coarse grid correction
+        x += self.levels[lvl].P * coarse_x #+ self.levels[lvl].b_zero  # coarse grid correction
 
-        self.levels[lvl].postsmoother(A, x, b)
+        if (cycle != 'FAMG'):
+            self.levels[lvl].postsmoother(A, x, b)
+
+        if (cycle == 'FAMG'):
+            f_relaxation(self.levels[lvl].A, x, b, self.levels[lvl].splitting, iterations=20, sweep='symmetric')
+            if (lvl != 0):
+                for cycle_cnt in range(cyclesPerLevel):
+                    self._solve(lvl, x, b, 'V', cyclesPerLevel)
 
     def visualize_coarse_grids(self, directory):
         # Dump a visualization of the coarse grids in the given directory.

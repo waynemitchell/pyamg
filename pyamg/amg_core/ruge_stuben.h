@@ -337,6 +337,55 @@ void rs_cf_splitting(const I n_nodes,
     }
 }
 
+ /* Compute a C/F splitting for a uniform 2D problem that is a shifted version of RS coarsening on Poisson:
+
+    C - f - C - f - C
+    f - f - f - f - f
+    C - f - C - f - C
+    f - f - f - f - f
+    C - f - C - f - C
+
+    Note: acceptable grid sizes are nxn elements where n = 2^i + 2 for some i
+ *
+ * Parameters:
+ *   n_nodes   - number of rows in A
+ *   Sp[]      - CSR pointer array
+ *   Sj[]      - CSR index array
+ *   Tp[]      - CSR pointer array
+ *   Tj[]      - CSR index array
+ *   splitting - array to store the C/F splitting
+ *
+ * Notes:
+ *   The splitting array must be preallocated
+ *
+ */
+template<class I>
+void shifted_2d_coarsening(const I n_nodes,
+                     const I Sp[], const int Sp_size,
+                           I splitting[], const int splitting_size)
+{
+  // First count how many interior nodes (to determine grid size)
+  int cnt = 0;
+  for (int i = 0; i < splitting_size; i++)
+  {
+    if (Sp[i+1] - Sp[i] > 1) cnt++;
+  }
+  int n = std::sqrt(cnt) + 1; 
+
+  // Now loop through and set splitting
+  cnt = 0;
+  for (int i = 0; i < splitting_size; i++)
+  {
+    if (Sp[i+1] - Sp[i] > 1) // If an interior node
+    {
+      if ( ( (cnt % (n-1)) % 2 == 0 ) && ( (cnt/(n-1) % 2 == 0) ) ) splitting[i] = 1;
+      else splitting[i] = 0;
+      cnt++;
+    }
+    else splitting[i] = 0;
+  }
+}
+
 /*
  *  Compute a CLJP splitting
  *
@@ -882,6 +931,12 @@ void rs_boundary_smoothing_interpolation_pass2(const I n_nodes,
                     // Set w_ij = -numerator/denominator
                     // printf("  numerator = %f, denominator = %f\n", numerator, denominator);
                     Bx[nnz] = -numerator/denominator;
+
+
+
+                    // if (boundary_flag) Bx[nnz] = 1.0/(Bp[i+1] - Bp[i]);
+
+
                     nnz++;
                 }
             }
