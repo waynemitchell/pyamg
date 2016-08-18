@@ -567,7 +567,7 @@ class multilevel_solver:
             self.levels[lvl].postsmoother(A, x, b)
 
         if (cycle == 'FAMG'):
-            f_relaxation(self.levels[lvl].A, x, b, self.levels[lvl].splitting, iterations=20, sweep='symmetric')
+            # f_relaxation(self.levels[lvl].A, x, b, self.levels[lvl].splitting, iterations=20, sweep='symmetric')
             if (lvl != 0):
                 for cycle_cnt in range(cyclesPerLevel):
                     self._solve(lvl, x, b, 'V', cyclesPerLevel)
