@@ -119,7 +119,7 @@ def distance_strength_of_connection(A, V, theta=2.0, relative_drop=True):
     return C
 
 
-def classical_strength_of_connection(A, theta=0.0, do_amalgamation=True):
+def classical_strength_of_connection(A, theta=0.0):
     """
     Return a strength of connection matrix using the classical AMG measure
     An off-diagonal entry A[i,j] is a strong connection iff::
@@ -198,7 +198,7 @@ def classical_strength_of_connection(A, theta=0.0, do_amalgamation=True):
     fn(A.shape[0], theta, A.indptr, A.indices, A.data, Sp, Sj, Sx)
     S = sparse.csr_matrix((Sx, Sj, Sp), shape=A.shape)
 
-    if (blocksize > 1 and do_amalgamation):
+    if blocksize > 1:
         S = amalgamate(S, blocksize)
 
     # Strength represents "distance", so take the magnitude
