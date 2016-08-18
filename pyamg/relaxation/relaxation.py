@@ -16,6 +16,7 @@ __all__ = ['sor', 'gauss_seidel', 'jacobi', 'polynomial']
 __all__ += ['schwarz', 'schwarz_parameters']
 __all__ += ['jacobi_ne', 'gauss_seidel_ne', 'gauss_seidel_nr']
 __all__ += ['gauss_seidel_indexed', 'block_jacobi', 'block_gauss_seidel']
+__all__ += ['boundary_relaxation']
 
 
 def make_system(A, x, b, formats=None):
@@ -479,7 +480,7 @@ def jacobi(A, x, b, iterations=1, omega=1.0):
                                 row_step, R, omega)
 
 def boundary_relaxation(A, x, b, iterations=1):
-    """Perform boundary relaxation iteration on the linear system Ax=b
+    """Perform boundary relaxation iteration (Jacobi iteration where only points with non-zero row sum in A are modified) on the linear system Ax=b
 
     Parameters
     ----------
@@ -491,12 +492,14 @@ def boundary_relaxation(A, x, b, iterations=1):
         Right-hand side (length N)
     iterations : int
         Number of iterations to perform
-    omega : scalar
-        Damping parameter
 
     Returns
     -------
     Nothing, x will be modified in place.
+
+    Examples
+    --------
+    >>> 
 
     """
     A, x, b = make_system(A, x, b, formats=['csr'])

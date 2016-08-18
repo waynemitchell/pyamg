@@ -26,7 +26,6 @@ def ruge_stuben_solver(A,
                        strength=('classical', {'theta': 0.25 ,'do_amalgamation': False}),
                        CF='RS',
                        interp='standard',
-                       b_zero=None,
                        presmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        postsmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        max_levels=10, max_coarse=500, keep=False, verts=None, block_starts=None, **kwargs):
@@ -60,7 +59,7 @@ def ruge_stuben_solver(A,
         diagnostics.  For example, if True, then strength of connection (C) and
         tentative prolongation (T) are kept.
     verts: array of tuples
-        If non-trivial values passed in, the C/F splitting on each level will be saved to a file.
+        Physical locations of dofs. Used for visualizing coarse grids.
     block_starts: list of integers
         If non-trivial, list of starting row indices of blocks of A if A represents a system (used for unknown approach for systems)
 
@@ -122,12 +121,6 @@ def ruge_stuben_solver(A,
     else:
         levels[-1].verts = verts
 
-    if (interp=='boundary_smoothing'):
-        if b_zero is None:
-            levels[-1].b_zero = numpy.zeros(A.shape[1])
-        else:
-            levels[-1].b_zero = b_zero
-
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
         # print "Level ", len(levels) - 1
         extend_hierarchy(levels, strength, CF, interp, keep)
@@ -149,8 +142,6 @@ def extend_hierarchy(levels, strength, CF, interp, keep):
     A = levels[-1].A
     block_starts = levels[-1].block_starts
     verts = levels[-1].verts
-    if (interp=='boundary_smoothing'):
-        b_zero = levels[-1].b_zero
 
     # If this is a system, apply the unknown approach by coarsening and generating interpolation based on each diagonal block of A
     if (block_starts):
@@ -212,13 +203,7 @@ def extend_hierarchy(levels, strength, CF, interp, keep):
         elif fn == 'direct':
             P_diag.append( direct_interpolation(mat, C_diag[-1], splitting[-1]) )
         elif fn == 'boundary_smoothing':
-            if (block_starts):
-                start = block_starts[block_cnt]
-                end = block_starts[block_cnt+1]
-            else:
-                start = 0
-                end = len(b_zero)
-            P_diag.append( boundary_smoothing_interpolation(mat, C_diag[-1], splitting[-1], b_zero[start:end]) )
+            P_diag.append( boundary_smoothing_interpolation(mat, C_diag[-1], splitting[-1] ) )
         else:
             raise ValueError('unknown interpolation method (%s)' % interp)
 
@@ -243,10 +228,6 @@ def extend_hierarchy(levels, strength, CF, interp, keep):
     levels[-1].R = R                  # restriction operator
 
     levels.append(multilevel_solver.level())
-
-    # If needed store b_zero on next level
-    if (interp=='boundary_smoothing'):
-        levels[-1].b_zero = R*b_zero
 
     # Form next level through Galerkin product
     # !!! For systems, how do I propogate the block structure information down to the next grid? Especially if the blocks are different sizes? !!!
