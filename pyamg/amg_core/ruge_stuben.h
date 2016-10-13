@@ -769,33 +769,40 @@ void rs_standard_interpolation_pass2(const I n_nodes,
                         if ( (splitting[Sj[kk]] == F_NODE) && (Sj[kk] != i) ){
                             // Get column index k
                             I k = Sj[kk];
-                            // printf("  top sum k = %d\n", k);
-                            // Calculate sum for inner denominator (loop over strongly connected C-points)
-                            T inner_denominator = 0;
-                            I inner_denom_added_to = 0;
-                            for(I ll = Sp[i]; ll < Sp[i+1]; ll++){
-                                if ( (splitting[Sj[ll]] == C_NODE) && (Sj[ll] != i) ){
-                                    // Get column index l
-                                    I l = Sj[ll];
-                                    // Add connection a_kl if present in matrix (search over kth row in A for connection)
-                                    for(I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++){
-                                        if ( Aj[search_ind] == l )
-                                        {
-                                          inner_denom_added_to = 1;
-                                          inner_denominator += Ax[search_ind];
+
+                            // Get a_kj (have to search over k'th row in A for connection a_kj)
+                            T a_kj = 0;
+                            for(I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++){
+                                if ( Aj[search_ind] == j ){
+                                    a_kj = Ax[search_ind];
+                                }
+                            }
+
+                            // If a_kj == 0, then we don't need to do any more work, otherwise proceed to account for node k's contribution
+                            if (a_kj != 0)
+                            {
+                                // Calculate sum for inner denominator (loop over strongly connected C-points)
+                                T inner_denominator = 0;
+                                I inner_denom_added_to = 0;
+                                for(I ll = Sp[i]; ll < Sp[i+1]; ll++){
+                                    if ( (splitting[Sj[ll]] == C_NODE) && (Sj[ll] != i) ){
+                                        // Get column index l
+                                        I l = Sj[ll];
+                                        // Add connection a_kl if present in matrix (search over kth row in A for connection)
+                                        for(I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++){
+                                            if ( Aj[search_ind] == l && a_kj*Ax[search_ind] > 0) // Note: we check here to make sure a_kj and a_kl are same sign
+                                            {
+                                              inner_denom_added_to = 1;
+                                              inner_denominator += Ax[search_ind];
+                                            }
                                         }
                                     }
                                 }
-                            }
-                            // printf("    inner_denominator = %f\n", i, inner_denominator);
-                            // Add a_ik*a_kj/inner_denominator to the numerator (have to search over k'th row in A for connection a_kj)
-                            for(I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++){
-                                if ( Aj[search_ind] == j ){
-                                    if (inner_denominator == 0 && !inner_denom_added_to) printf("Inner denominator was zero: there was a stronly connected fine point with no connections to points in C_i\n");
-                                    if (inner_denominator == 0 && inner_denom_added_to) printf("Inner denominator was zero due to cancellations!\n");
-                                    numerator += Sx[kk]*Ax[search_ind]/inner_denominator;
-                                    // printf("    a_ik = %f, a_kj = %f\n", Sx[kk], Ax[search_ind]);
-                                }
+
+                                // Add a_ik*a_kj/inner_denominator to the numerator 
+                                if (inner_denominator == 0 && !inner_denom_added_to) printf("Inner denominator was zero: there was a stronly connected fine point with no connections to points in C_i\n");
+                                if (inner_denominator == 0 && inner_denom_added_to) printf("Inner denominator was zero due to cancellations!\n");
+                                numerator += Sx[kk]*a_kj/inner_denominator;
                             }
                         }
                     }
