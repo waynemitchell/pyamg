@@ -772,13 +772,18 @@ void rs_standard_interpolation_pass2(const I n_nodes,
                             // printf("  top sum k = %d\n", k);
                             // Calculate sum for inner denominator (loop over strongly connected C-points)
                             T inner_denominator = 0;
+                            I inner_denom_added_to = 0;
                             for(I ll = Sp[i]; ll < Sp[i+1]; ll++){
                                 if ( (splitting[Sj[ll]] == C_NODE) && (Sj[ll] != i) ){
                                     // Get column index l
                                     I l = Sj[ll];
                                     // Add connection a_kl if present in matrix (search over kth row in A for connection)
                                     for(I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++){
-                                        if ( Aj[search_ind] == l ) inner_denominator += Ax[search_ind];
+                                        if ( Aj[search_ind] == l )
+                                        {
+                                          inner_denom_added_to = 1;
+                                          inner_denominator += Ax[search_ind];
+                                        }
                                     }
                                 }
                             }
@@ -786,6 +791,8 @@ void rs_standard_interpolation_pass2(const I n_nodes,
                             // Add a_ik*a_kj/inner_denominator to the numerator (have to search over k'th row in A for connection a_kj)
                             for(I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++){
                                 if ( Aj[search_ind] == j ){
+                                    if (inner_denominator == 0 && !inner_denom_added_to) printf("Inner denominator was zero: there was a stronly connected fine point with no connections to points in C_i\n");
+                                    if (inner_denominator == 0 && inner_denom_added_to) printf("Inner denominator was zero due to cancellations!\n");
                                     numerator += Sx[kk]*Ax[search_ind]/inner_denominator;
                                     // printf("    a_ik = %f, a_kj = %f\n", Sx[kk], Ax[search_ind]);
                                 }
@@ -794,6 +801,7 @@ void rs_standard_interpolation_pass2(const I n_nodes,
                     }
                     // Set w_ij = -numerator/denominator
                     // printf("  numerator = %f, denominator = %f\n", numerator, denominator);
+                    if (denominator == 0) printf("Outer denominator was zero: diagonal plus sum of weak connections was zero\n");
                     Bx[nnz] = -numerator/denominator;
                     nnz++;
                 }
