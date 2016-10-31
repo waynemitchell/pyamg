@@ -11,6 +11,7 @@ from pyamg.relaxation.relaxation import boundary_relaxation
 __all__ = ['direct_interpolation']
 __all__ += ['standard_interpolation']
 __all__ += ['boundary_smoothing_interpolation']
+__all__ += ['boundary_clipped_interpolation']
 
 
 def direct_interpolation(A, C, splitting):
@@ -78,7 +79,7 @@ def direct_interpolation(A, C, splitting):
     return csr_matrix((Px, Pj, Pp))
 
 def standard_interpolation(A, C, splitting):
-    """Create prolongator using direct interpolation
+    """Create prolongator using standard interpolation
 
     Parameters
     ----------
@@ -212,8 +213,8 @@ def boundary_smoothing_interpolation(A, C, splitting):
     # X_grid, Y_grid = np.meshgrid(X_grid, Y_grid)
     # ax.scatter( X_grid, Y_grid, X )
     # plt.show()
-    filename = '/Users/mitchell82/Documents/research/famg/famgSISCPaper2016/matlab/matrices/X' + str(A.shape[0]) + '.txt'
-    np.savetxt(filename, X)
+    # filename = '/Users/mitchell82/Documents/research/famg/famgSISCPaper2016/matlab/matrices/X' + str(A.shape[0]) + '.txt'
+    # np.savetxt(filename, X)
 
 
     amg_core.rs_boundary_smoothing_interpolation_pass2(A.shape[0],
@@ -229,3 +230,58 @@ def boundary_smoothing_interpolation(A, C, splitting):
     # np.savetxt('/Users/mitchell82/Desktop/Pj.txt', Pj)
 
     return csr_matrix((Px, Pj, Pp))
+
+def boundary_clipped_interpolation(A, C, splitting):
+    """Create prolongator using direct interpolation
+
+    Parameters
+    ----------
+    A : {csr_matrix}
+        NxN matrix in CSR format
+    C : {csr_matrix}
+        Strength-of-Connection matrix
+        Must have zero diagonal
+    splitting : array
+        C/F splitting stored in an array of length N
+
+    Returns
+    -------
+    P : {csr_matrix}
+        Prolongator using direct interpolation
+
+    Examples
+    --------
+
+
+    """
+    if not isspmatrix_csr(A):
+        raise TypeError('expected csr_matrix for A')
+
+    if not isspmatrix_csr(C):
+        raise TypeError('expected csr_matrix for C')
+
+    # Interpolation weights are computed based on entries in A, but subject to
+    # the sparsity pattern of C.  So, copy the entries of A into the
+    # sparsity pattern of C.
+    C = C.copy()
+    C.data[:] = 1.0
+    C = C.multiply(A)
+
+    Pp = np.empty_like(A.indptr)
+    print "Going into c code for boundary clipped pass 1 interp"
+
+    amg_core.rs_boundary_clipped_interpolation_pass1(A.shape[0],
+                                           C.indptr, C.indices, splitting, Pp)
+
+    nnz = Pp[-1]
+    Pj = np.empty(nnz, dtype=Pp.dtype)
+    Px = np.empty(nnz, dtype=A.dtype)
+
+    print "Going into c code for boundary clipped pass 2 interp"
+    amg_core.rs_boundary_clipped_interpolation_pass2(A.shape[0],
+                                           A.indptr, A.indices, A.data,
+                                           C.indptr, C.indices, C.data,
+                                           splitting,
+                                           Pp, Pj, Px)
+
+    return  csr_matrix((Px, Pj, Pp))

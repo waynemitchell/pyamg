@@ -510,6 +510,9 @@ class multilevel_solver:
 
         if (cycle != 'FAMG'):
             self.levels[lvl].presmoother(A, x, b)
+        else:
+            for i in range(0):
+                self.levels[lvl].presmoother(A, x, b)
 
         residual = b - A * x
 

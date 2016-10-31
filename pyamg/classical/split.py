@@ -106,8 +106,12 @@ from pyamg.util.utils import remove_diagonal
 __all__ = ['RS', 'PMIS', 'PMISc', 'MIS']
 __docformat__ = "restructuredtext en"
 
+def FindBoundaryAdjacentPoints(A):
+    influence = np.empty(A.shape[0], dtype='intc')
+    amg_core.find_boundary_adjacent_points(A.shape[0], A.indptr, A.indices, A.data, influence)
+    return influence
 
-def RS(S):
+def RS(S, influence):
     """Compute a C/F splitting using Ruge-Stuben coarsening
 
     Parameters
@@ -148,9 +152,13 @@ def RS(S):
 
     splitting = np.empty(S.shape[0], dtype='intc')
 
+    if (influence == None):
+        influence = np.zeros(S.shape[0], dtype='intc')
+
     amg_core.rs_cf_splitting(S.shape[0],
                              S.indptr, S.indices,
                              T.indptr, T.indices,
+                             influence,
                              splitting)
 
     return splitting

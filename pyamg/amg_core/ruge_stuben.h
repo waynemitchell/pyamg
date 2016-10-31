@@ -149,6 +149,7 @@ void maximum_row_value(const I n_row,
  *   Sj[]      - CSR index array
  *   Tp[]      - CSR pointer array
  *   Tj[]      - CSR index array
+ *   influence - array that influences splitting (values stored here are added to lambda for each point)
  *   splitting - array to store the C/F splitting
  *
  * Notes:
@@ -161,13 +162,14 @@ void rs_cf_splitting(const I n_nodes,
                      const I Sj[], const int Sj_size,
                      const I Tp[], const int Tp_size,
                      const I Tj[], const int Tj_size,
+                     const I influence[], const int influence_size,
                            I splitting[], const int splitting_size)
 {
     std::vector<I> lambda(n_nodes,0);
 
     //compute lambdas
     for(I i = 0; i < n_nodes; i++){
-        lambda[i] = Tp[i+1] - Tp[i];
+        lambda[i] = Tp[i+1] - Tp[i] + influence[i];
     }
 
     //for each value of lambda, create an interval of nodes with that value
@@ -337,6 +339,26 @@ void rs_cf_splitting(const I n_nodes,
     }
 }
 
+
+ /* Find the boundary-adjacent points in a matrix (assuming that row sum nonzero corresponds to boundary-adjacent points) */
+template<class I, class T>
+void find_boundary_adjacent_points(const I n_nodes,
+                                   const I Ap[], const int Ap_size,
+                                   const I Aj[], const int Aj_size,
+                                   const T Ax[], const int Ax_size,
+                                         I boundary_adjacent[], const int boundary_adjacent_size)
+{
+    for(I i = 0; i < n_nodes; i++)
+    {
+        T row_sum = 0.0;
+        for(I j = Ap[i]; j < Ap[i+1]; j++) row_sum += Ax[j];
+        if ( std::abs(row_sum) > 0.00001 ) boundary_adjacent[i] = 1;
+        else boundary_adjacent[i] = 0;
+    }
+}
+
+
+
  /* Compute a C/F splitting for a uniform 2D problem that is a shifted version of RS coarsening on Poisson:
 
     C - f - C - f - C
@@ -370,7 +392,7 @@ void shifted_2d_coarsening(const I n_nodes,
   {
     if (Sp[i+1] - Sp[i] > 1) cnt++;
   }
-  int n = std::sqrt(cnt) + 1; 
+  int n = std::sqrt(cnt)+1; 
 
   // Now loop through and set splitting
   cnt = 0;
@@ -967,6 +989,181 @@ void rs_boundary_smoothing_interpolation_pass2(const I n_nodes,
     for(I i = 0; i < Bp[n_nodes]; i++){
         Bj[i] = map[Bj[i]];
     }
+}
+
+/*
+ *   Produce the modified Ruge-Stuben prolongator clipping connections between interior points and boundary-adjacent points
+ *   Needs to be used in conjunction with a C/F splitting that biases the boundary-adjacent points
+ *
+ *   The first pass uses the strength of connection matrix 'S'
+ *   and C/F splitting to compute the row pointer for the prolongator.
+ *
+ *   The second pass fills in the nonzero entries of the prolongator
+ *
+ *
+ */
+template<class I>
+void rs_boundary_clipped_interpolation_pass1(const I n_nodes,
+                                   const I Sp[], const int Sp_size,
+                                   const I Sj[], const int Sj_size,
+                                   const I splitting[], const int splitting_size,
+                                         I Bp[], const int Bp_size)
+{
+    I nnz = 0;
+    Bp[0] = 0;
+    for(I i = 0; i < n_nodes; i++){
+        if( splitting[i] == C_NODE ){
+            nnz++;
+        } else {
+            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
+                if ( (splitting[Sj[jj]] == C_NODE) && (Sj[jj] != i) )
+                    nnz++;
+            }
+        }
+        Bp[i+1] = nnz;
+    }
+}
+
+template<class I, class T>
+void rs_boundary_clipped_interpolation_pass2(const I n_nodes,
+                                   const I Ap[], const int Ap_size,
+                                   const I Aj[], const int Aj_size,
+                                   const T Ax[], const int Ax_size,
+                                   const I Sp[], const int Sp_size,
+                                   const I Sj[], const int Sj_size,
+                                   const T Sx[], const int Sx_size,
+                                   const I splitting[], const int splitting_size,
+                                   const I Bp[], const int Bp_size,
+                                         I Bj[], const int Bj_size,
+                                         T Bx[], const int Bx_size)
+{
+
+    bool *boundary_flag = (bool*) malloc(n_nodes*sizeof(bool));
+
+    for(I i = 0; i < n_nodes; i++){
+        T row_sum = 0;
+        // Sum entire row of A
+        for(I mm = Ap[i]; mm < Ap[i+1]; mm++) row_sum += Ax[mm];
+        // If row sum is nonzero, mark as boundary point
+        if ( std::abs(row_sum) > 0.00001 ) boundary_flag[i] = true;
+        else boundary_flag[i] = false;
+        }
+
+    for(I i = 0; i < n_nodes; i++){
+        // If node i is a C-point, then set interpolation as injection
+        if(splitting[i] == C_NODE){
+            Bj[Bp[i]] = i;
+            Bx[Bp[i]] = 1;
+        } 
+        // Otherwise, use RS standard interpolation formula
+        else {
+
+            I nnz = Bp[i];
+            if(boundary_flag[i]){ // If this is a boundary-adjacent node, do linear interpolation from neighbors
+                for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
+                    if ( (splitting[Sj[jj]] == C_NODE) && (Sj[jj] != i) ){
+                        Bj[nnz] = Sj[jj];
+                        if(boundary_flag[jj]){
+                            // printf("Bx[%d] = %f, Bx_size = %d\n", nnz, 0.5, Bx_size);
+                            Bx[nnz] = 0.5;
+                        }
+                        else{
+                            // printf("Bx[%d] = %f, Bx_size = %d\n", nnz, 0.0, Bx_size);
+                            Bx[nnz] = 0.0;
+                        }
+                    nnz++;
+                    }
+                }
+            }
+
+            else{
+                // Calculate denominator
+                T denominator = 0;
+                // Start by summing entire row of A
+                for(I mm = Ap[i]; mm < Ap[i+1]; mm++) if(!boundary_flag[Aj[mm]]) denominator += Ax[mm]; // Boundary-adjacent points and interior points shoulnd't talk to eachother
+                // Then subtract off the strong connections so that you are left with 
+                // denominator = a_ii + sum_{m in weak connections} a_im
+                for(I mm = Sp[i]; mm < Sp[i+1]; mm++){
+                    if ( Sj[mm] != i && !boundary_flag[Sj[mm]]) denominator -= Sx[mm]; // making sure to leave the diagonal entry in there
+                }
+
+                // Set entries in P (interpolation weights w_ij from strongly connected C-points)
+                for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
+                    if ( (splitting[Sj[jj]] == C_NODE) && (Sj[jj] != i) ){
+                        if (boundary_flag[Sj[jj]]){
+                            Bj[nnz] = Sj[jj];
+                            // I j = Sj[jj];
+                            // printf("Weight i = %d, j = %d\n", i, j);
+                            // printf("Bx[%d] = %f, Bx_size = %d\n", nnz, 0.0, Bx_size);
+                            Bx[nnz] = 0.0;
+                            nnz++;
+                            }
+                        else{
+                            
+                            // Set temporary value for Bj to be mapped to appropriate coarse-grid column index later and get column index j
+                            Bj[nnz] = Sj[jj];
+                            I j = Sj[jj];
+                            // printf("Weight i = %d, j = %d\n", i, j);
+                            // Initialize numerator as a_ij
+                            T numerator = Sx[jj];
+                            // printf("  numerator initialized to %f\n", numerator);
+                            // Sum over strongly connected fine points
+                            for(I kk = Sp[i]; kk < Sp[i+1]; kk++){
+                                if ( (splitting[Sj[kk]] == F_NODE) && (Sj[kk] != i) && !boundary_flag[Sj[kk]]){ // Only add contributions from fine, strongly connected, interior points
+                                    // Get column index k
+                                    I k = Sj[kk];
+                                    // printf("  top sum k = %d\n", k);
+                                    // Calculate sum for inner denominator (loop over strongly connected C-points)
+                                    T inner_denominator = 0;
+                                    for(I ll = Sp[i]; ll < Sp[i+1]; ll++){
+                                        if ( (splitting[Sj[ll]] == C_NODE) && (Sj[ll] != i) && !boundary_flag[Sj[ll]] ){ // Inner denominator sum thus only sweeps over interior points
+                                            // Get column index l
+                                            I l = Sj[ll];
+                                            // Add connection a_kl if present in matrix (search over kth row in A for connection)
+                                            for(I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++){
+                                                if ( Aj[search_ind] == l ) inner_denominator += Ax[search_ind];
+                                            }
+                                        }
+                                    }
+                                    // printf("    inner_denominator = %f\n", i, inner_denominator);
+                                    // Add a_ik*a_kj/inner_denominator to the numerator (have to search over k'th row in A for connection a_kj)
+                                    for(I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++){
+                                        if ( Aj[search_ind] == j ){
+                                            numerator += Sx[kk]*Ax[search_ind]/inner_denominator;
+                                            // printf("    a_ik = %f, a_kj = %f\n", Sx[kk], Ax[search_ind]);
+                                        }
+                                    }
+                                }
+                            }
+                            // Set w_ij = -numerator/denominator
+                            // printf("  numerator = %f, denominator = %f\n", numerator, denominator);
+                            // printf("Bx[%d] = %f, Bx_size = %d\n", nnz, -numerator/denominator, Bx_size);
+                            Bx[nnz] = -numerator/denominator;
+
+
+
+                            // if (boundary_flag) Bx[nnz] = 1.0/(Bp[i+1] - Bp[i]);
+
+
+                            nnz++;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    std::vector<I> map(n_nodes);
+    for(I i = 0, sum = 0; i < n_nodes; i++){
+        map[i]  = sum;
+        sum    += splitting[i];
+    }
+    for(I i = 0; i < Bp[n_nodes]; i++){
+        Bj[i] = map[Bj[i]];
+    }
+
+    printf("Done with rs_boundary_clipped_interpolation_pass2\n");
 }
 
 /* Helper function for compatible relaxation to perform steps 3.1d - 3.1f

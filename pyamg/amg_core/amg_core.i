@@ -216,6 +216,7 @@ INSTANTIATE_INDEXDATA_COMPLEX(classical_strength_of_connection)
 INSTANTIATE_INDEXDATA_COMPLEX(maximum_row_value)
 
 INSTANTIATE_INDEX_ONLY(rs_cf_splitting)
+INSTANTIATE_INDEXDATA(find_boundary_adjacent_points)
 INSTANTIATE_INDEX_ONLY(shifted_2d_coarsening)
 INSTANTIATE_INDEX_ONLY(cljp_naive_splitting)
 INSTANTIATE_INDEX_ONLY(rs_direct_interpolation_pass1)
@@ -224,6 +225,8 @@ INSTANTIATE_INDEX_ONLY(rs_standard_interpolation_pass1)
 INSTANTIATE_INDEXDATA(rs_standard_interpolation_pass2)
 INSTANTIATE_INDEX_ONLY(rs_boundary_smoothing_interpolation_pass1)
 INSTANTIATE_INDEXDATA(rs_boundary_smoothing_interpolation_pass2)
+INSTANTIATE_INDEX_ONLY(rs_boundary_clipped_interpolation_pass1)
+INSTANTIATE_INDEXDATA(rs_boundary_clipped_interpolation_pass2)
 INSTANTIATE_INDEXDATA(cr_helper)
 
 /*----------------------------------------------------------------------------

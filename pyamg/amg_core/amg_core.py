@@ -464,9 +464,16 @@ def maximum_row_value(*args):
     """
     return _amg_core.maximum_row_value(*args)
 
-def rs_cf_splitting(n_nodes, Sp, Sj, Tp, Tj, splitting):
-    """rs_cf_splitting(int const n_nodes, int const [] Sp, int const [] Sj, int const [] Tp, int const [] Tj, int [] splitting)"""
-    return _amg_core.rs_cf_splitting(n_nodes, Sp, Sj, Tp, Tj, splitting)
+def rs_cf_splitting(n_nodes, Sp, Sj, Tp, Tj, influence, influence_size, splitting):
+    """rs_cf_splitting(int const n_nodes, int const [] Sp, int const [] Sj, int const [] Tp, int const [] Tj, int const [] influence, int const influence_size, int [] splitting)"""
+    return _amg_core.rs_cf_splitting(n_nodes, Sp, Sj, Tp, Tj, influence, influence_size, splitting)
+
+def find_boundary_adjacent_points(*args):
+    """
+    find_boundary_adjacent_points(int const n_nodes, int const [] Ap, int const [] Aj, float const [] Ax, int [] boundary_adjacent, int const boundary_adjacent_size)
+    find_boundary_adjacent_points(int const n_nodes, int const [] Ap, int const [] Aj, double const [] Ax, int [] boundary_adjacent, int const boundary_adjacent_size)
+    """
+    return _amg_core.find_boundary_adjacent_points(*args)
 
 def shifted_2d_coarsening(n_nodes, Sp, splitting):
     """shifted_2d_coarsening(int const n_nodes, int const [] Sp, int [] splitting)"""
@@ -508,6 +515,17 @@ def rs_boundary_smoothing_interpolation_pass2(*args):
     rs_boundary_smoothing_interpolation_pass2(int const n_nodes, int const [] Ap, int const [] Aj, double const [] Ax, int const [] Sp, int const [] Sj, double const [] Sx, double const [] X, int const [] splitting, int const [] Bp, int [] Bj, double [] Bx)
     """
     return _amg_core.rs_boundary_smoothing_interpolation_pass2(*args)
+
+def rs_boundary_clipped_interpolation_pass1(n_nodes, Sp, Sj, splitting, Bp):
+    """rs_boundary_clipped_interpolation_pass1(int const n_nodes, int const [] Sp, int const [] Sj, int const [] splitting, int [] Bp)"""
+    return _amg_core.rs_boundary_clipped_interpolation_pass1(n_nodes, Sp, Sj, splitting, Bp)
+
+def rs_boundary_clipped_interpolation_pass2(*args):
+    """
+    rs_boundary_clipped_interpolation_pass2(int const n_nodes, int const [] Ap, int const [] Aj, float const [] Ax, int const [] Sp, int const [] Sj, float const [] Sx, int const [] splitting, int const [] Bp, int [] Bj, float [] Bx)
+    rs_boundary_clipped_interpolation_pass2(int const n_nodes, int const [] Ap, int const [] Aj, double const [] Ax, int const [] Sp, int const [] Sj, double const [] Sx, int const [] splitting, int const [] Bp, int [] Bj, double [] Bx)
+    """
+    return _amg_core.rs_boundary_clipped_interpolation_pass2(*args)
 
 def cr_helper(*args):
     """
