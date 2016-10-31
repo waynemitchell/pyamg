@@ -124,9 +124,11 @@ def ruge_stuben_solver(A,
     else:
         levels[-1].verts = verts
 
+    levels[-1].influence = influence
+
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
         # print "Level ", len(levels) - 1
-        extend_hierarchy(levels, strength, CF, influence, interp, keep)
+        extend_hierarchy(levels, strength, CF, interp, keep)
 
     ml = multilevel_solver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
@@ -134,7 +136,7 @@ def ruge_stuben_solver(A,
 
 
 # internal function
-def extend_hierarchy(levels, strength, CF, influence, interp, keep):
+def extend_hierarchy(levels, strength, CF, interp, keep):
     """ helper function for local methods """
     def unpack_arg(v):
         if isinstance(v, tuple):
@@ -145,6 +147,7 @@ def extend_hierarchy(levels, strength, CF, influence, interp, keep):
     A = levels[-1].A
     block_starts = levels[-1].block_starts
     verts = levels[-1].verts
+    influence = levels[-1].influence
 
     # If this is a system, apply the unknown approach by coarsening and generating interpolation based on each diagonal block of A
     if (block_starts):
@@ -160,6 +163,7 @@ def extend_hierarchy(levels, strength, CF, influence, interp, keep):
     next_lvl_block_starts = [0]
     block_cnt = 0
     for mat in A_diag:
+        # print "compute SoC"
         fn, kwargs = unpack_arg(strength)
         if fn == 'symmetric':
             C_diag.append( symmetric_strength_of_connection(mat, **kwargs) )
@@ -182,9 +186,10 @@ def extend_hierarchy(levels, strength, CF, influence, interp, keep):
                              str(fn))
 
         # Generate the C/F splitting
+        # print "compute C/F splitting"
         fn, kwargs = unpack_arg(CF)
         if fn == 'RS':
-            splitting.append( split.RS(C_diag[-1]), influence )
+            splitting.append( split.RS(C_diag[-1],influence) )
         elif fn == 'PMIS':
             splitting.append( split.PMIS(C_diag[-1]) )
         elif fn == 'PMISc':
@@ -200,6 +205,7 @@ def extend_hierarchy(levels, strength, CF, influence, interp, keep):
 
         # Generate the interpolation matrix that maps from the coarse-grid to the
         # fine-grid
+        # print "compute Interpolation"
         fn, kwargs = unpack_arg(interp)
         if fn == 'standard':
             P_diag.append( standard_interpolation(mat, C_diag[-1], splitting[-1]) )
@@ -208,7 +214,6 @@ def extend_hierarchy(levels, strength, CF, influence, interp, keep):
         elif fn == 'boundary_smoothing':
             P_diag.append( boundary_smoothing_interpolation(mat, C_diag[-1], splitting[-1] ) )
         elif fn == 'boundary_clipped':
-            print "Boundary clipped interp"
             P_diag.append( boundary_clipped_interpolation(mat, C_diag[-1], splitting[-1] ) )
         else:
             raise ValueError('unknown interpolation method (%s)' % interp)
@@ -222,6 +227,8 @@ def extend_hierarchy(levels, strength, CF, influence, interp, keep):
     # Generate the restriction matrix that maps from the fine-grid to the
     # coarse-grid
     R = P.T.tocsr()
+
+
 
     # Store relevant information for this level
     splitting = numpy.concatenate(splitting)
@@ -239,6 +246,12 @@ def extend_hierarchy(levels, strength, CF, influence, interp, keep):
     # !!! For systems, how do I propogate the block structure information down to the next grid? Especially if the blocks are different sizes? !!!
     A = R * A * P
     levels[-1].A = A
+
+    if (influence != None):
+        levels[-1].influence = (R*influence).astype('intc')
+
+    else:
+        levels[-1].influence = None
 
     if (block_starts):
         levels[-1].block_starts = next_lvl_block_starts

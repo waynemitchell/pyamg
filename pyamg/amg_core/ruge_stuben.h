@@ -168,8 +168,16 @@ void rs_cf_splitting(const I n_nodes,
     std::vector<I> lambda(n_nodes,0);
 
     //compute lambdas
+    // printf("   Compute lambdas\n");
+    I lambda_max = 0;
     for(I i = 0; i < n_nodes; i++){
         lambda[i] = Tp[i+1] - Tp[i] + influence[i];
+        if (lambda[i] > lambda_max) lambda_max = lambda[i];
+        // if (lambda[i] > n_nodes)
+        // {
+        //   printf("Lamda was set too large\n");
+        //   lambda[i] = n_nodes;
+        // }
     }
 
     //for each value of lambda, create an interval of nodes with that value
@@ -177,15 +185,17 @@ void rs_cf_splitting(const I n_nodes,
     // count - is the number of indices in that interval
     // index to node - the node located at a given index
     // node to index - the index of a given node
-    std::vector<I> interval_ptr(n_nodes+1,0);
-    std::vector<I> interval_count(n_nodes+1,0);
+    lambda_max = lambda_max*2;
+    if (n_nodes+1 > lambda_max) lambda_max = n_nodes+1;
+    std::vector<I> interval_ptr(lambda_max,0);
+    std::vector<I> interval_count(lambda_max,0);
     std::vector<I> index_to_node(n_nodes);
     std::vector<I> node_to_index(n_nodes);
 
     for(I i = 0; i < n_nodes; i++){
         interval_count[lambda[i]]++;
     }
-    for(I i = 0, cumsum = 0; i < n_nodes; i++){
+    for(I i = 0, cumsum = 0; i < lambda_max; i++){
         interval_ptr[i] = cumsum;
         cumsum += interval_count[i];
         interval_count[i] = 0;
@@ -208,6 +218,7 @@ void rs_cf_splitting(const I n_nodes,
     }
 
     //Now add elements to C and F, in descending order of lambda
+    // printf("   Add elements to C and F in descending order of lambda\n");
     for(I top_index = n_nodes - 1; top_index != -1; top_index--){
         I i        = index_to_node[top_index];
         I lambda_i = lambda[i];
@@ -280,9 +291,9 @@ void rs_cf_splitting(const I n_nodes,
                             if(lambda[k] >= n_nodes - 1) continue;
 
                             // TODO make this robust
-                            //if(lambda[k] >= n_nodes -1)
+                            // if(lambda[k] >= n_nodes -1)
                             //    std::cout << std::endl << "lambda[" << k << "]=" << lambda[k] << " n_nodes=" << n_nodes << std::endl;
-                            //assert(lambda[k] < n_nodes - 1);//this would cause problems!
+                            // assert(lambda[k] < n_nodes - 1);//this would cause problems!
 
                             I lambda_k = lambda[k];
                             I old_pos  = node_to_index[k];
@@ -299,6 +310,11 @@ void rs_cf_splitting(const I n_nodes,
 
                             //increment lambda_k
                             lambda[k]++;
+                            // if (lambda[i] > n_nodes)
+                            // {
+                            //   printf("Lamda was set too large\n");
+                            //   lambda[i] = n_nodes;
+                            // }
                             // if (n_nodes == 121)
                               // std::cout << "    increment node #" << k << " to lambda " << lambda[k] << std::endl;
 
@@ -332,7 +348,7 @@ void rs_cf_splitting(const I n_nodes,
 
                     //decrement lambda_j
                     lambda[j]--;
-                    std::cout << "    decrement node #" << j << " to lambda " << lambda[j] << std::endl;
+                    // std::cout << "    decrement node #" << j << " to lambda " << lambda[j] << std::endl;
                 }
             }
         }
@@ -346,14 +362,24 @@ void find_boundary_adjacent_points(const I n_nodes,
                                    const I Ap[], const int Ap_size,
                                    const I Aj[], const int Aj_size,
                                    const T Ax[], const int Ax_size,
-                                         I boundary_adjacent[], const int boundary_adjacent_size)
+                                         I splitting[], const int splitting_size)
 {
     for(I i = 0; i < n_nodes; i++)
     {
         T row_sum = 0.0;
-        for(I j = Ap[i]; j < Ap[i+1]; j++) row_sum += Ax[j];
-        if ( std::abs(row_sum) > 0.00001 ) boundary_adjacent[i] = 1;
-        else boundary_adjacent[i] = 0;
+        for(I j = Ap[i]; j < Ap[i+1]; j++)
+        {
+          row_sum += Ax[j];
+          // printf("     Ax[%d] = %f\n", j, Ax[j]);
+        }
+        // printf("  row_sum = %f\n", row_sum);
+        if ( std::abs(row_sum) > 0.00001 && Ap[i+1] - Ap[i] > 1)
+        {
+            splitting[i] = 1;
+            if (Ap[i+1] - Ap[i] == 4) splitting[i]++; // Try to influence the corner boundary adjacent points more (!!! only works for 2D 9pt stencil type operators !!!)
+        }
+        else splitting[i] = 0;
+        // printf("  splitting[i] = %d\n", splitting[i]);
     }
 }
 
@@ -1055,7 +1081,7 @@ void rs_boundary_clipped_interpolation_pass2(const I n_nodes,
             Bj[Bp[i]] = i;
             Bx[Bp[i]] = 1;
         } 
-        // Otherwise, use RS standard interpolation formula
+        // Otherwise, use RS standard interpolation formula, clipping boundary connections and using linear interpolation at boundaries
         else {
 
             I nnz = Bp[i];
@@ -1063,7 +1089,7 @@ void rs_boundary_clipped_interpolation_pass2(const I n_nodes,
                 for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
                     if ( (splitting[Sj[jj]] == C_NODE) && (Sj[jj] != i) ){
                         Bj[nnz] = Sj[jj];
-                        if(boundary_flag[jj]){
+                        if(boundary_flag[Sj[jj]]){
                             // printf("Bx[%d] = %f, Bx_size = %d\n", nnz, 0.5, Bx_size);
                             Bx[nnz] = 0.5;
                         }
@@ -1163,7 +1189,6 @@ void rs_boundary_clipped_interpolation_pass2(const I n_nodes,
         Bj[i] = map[Bj[i]];
     }
 
-    printf("Done with rs_boundary_clipped_interpolation_pass2\n");
 }
 
 /* Helper function for compatible relaxation to perform steps 3.1d - 3.1f

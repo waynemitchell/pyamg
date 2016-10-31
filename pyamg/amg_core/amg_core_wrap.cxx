@@ -2970,11 +2970,10 @@ SWIG_Python_NonDynamicSetAttr(PyObject *obj, PyObject *name, PyObject *value) {
 #define SWIGTYPE_p_char swig_types[0]
 #define SWIGTYPE_p_double swig_types[1]
 #define SWIGTYPE_p_float swig_types[2]
-#define SWIGTYPE_p_int swig_types[3]
-#define SWIGTYPE_p_std__complexT_double_t swig_types[4]
-#define SWIGTYPE_p_std__complexT_float_t swig_types[5]
-static swig_type_info *swig_types[7];
-static swig_module_info swig_module = {swig_types, 6, 0, 0, 0, 0};
+#define SWIGTYPE_p_std__complexT_double_t swig_types[3]
+#define SWIGTYPE_p_std__complexT_float_t swig_types[4]
+static swig_type_info *swig_types[6];
+static swig_module_info swig_module = {swig_types, 5, 0, 0, 0, 0};
 #define SWIG_TypeQuery(name) SWIG_TypeQueryModule(&swig_module, &swig_module, name)
 #define SWIG_MangledTypeQuery(name) SWIG_MangledTypeQueryModule(&swig_module, &swig_module, name)
 
@@ -3336,7 +3335,7 @@ SWIG_AsVal_std_complex_Sl_float_Sg_ (PyObject *o, std::complex<float> *val)
 
 
 SWIGINTERNINLINE PyObject*
-SWIG_From_std_complex_Sl_float_Sg_  (/*@SWIG:/usr/local/Cellar/swig/3.0.7/share/swig/3.0.7/typemaps/swigmacros.swg,104,%ifcplusplus@*/
+SWIG_From_std_complex_Sl_float_Sg_  (/*@SWIG:/usr/local/share/swig/3.0.7/typemaps/swigmacros.swg,104,%ifcplusplus@*/
 
 const std::complex<float>&
 
@@ -3367,7 +3366,7 @@ SWIG_AsVal_std_complex_Sl_double_Sg_  (PyObject *o, std::complex<double>* val)
 
 
 SWIGINTERNINLINE PyObject*
-SWIG_From_std_complex_Sl_double_Sg_  (/*@SWIG:/usr/local/Cellar/swig/3.0.7/share/swig/3.0.7/typemaps/swigmacros.swg,104,%ifcplusplus@*/
+SWIG_From_std_complex_Sl_double_Sg_  (/*@SWIG:/usr/local/share/swig/3.0.7/typemaps/swigmacros.swg,104,%ifcplusplus@*/
 
 const std::complex<double>&
 
@@ -25390,10 +25389,8 @@ SWIGINTERN PyObject *_wrap_rs_cf_splitting(PyObject *SWIGUNUSEDPARM(self), PyObj
   int i6 = 1 ;
   PyArrayObject *array8 = NULL ;
   int i8 = 1 ;
-  void *argp10 = 0 ;
-  int res10 = 0 ;
-  int val11 ;
-  int ecode11 = 0 ;
+  PyArrayObject *array10 = NULL ;
+  int i10 = 1 ;
   PyArrayObject *array12 = NULL ;
   int i12 = 1 ;
   PyObject * obj0 = 0 ;
@@ -25403,9 +25400,8 @@ SWIGINTERN PyObject *_wrap_rs_cf_splitting(PyObject *SWIGUNUSEDPARM(self), PyObj
   PyObject * obj4 = 0 ;
   PyObject * obj5 = 0 ;
   PyObject * obj6 = 0 ;
-  PyObject * obj7 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOO:rs_cf_splitting",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOO:rs_cf_splitting",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) SWIG_fail;
   ecode1 = SWIG_AsVal_int(obj0, &val1);
   if (!SWIG_IsOK(ecode1)) {
     SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "rs_cf_splitting" "', argument " "1"" of type '" "int""'");
@@ -25443,18 +25439,16 @@ SWIGINTERN PyObject *_wrap_rs_cf_splitting(PyObject *SWIGUNUSEDPARM(self), PyObj
     arg9 = 1;
     for (i8=0; i8 < array_numdims(array8); ++i8) arg9 *= array_size(array8,i8);
   }
-  res10 = SWIG_ConvertPtr(obj5, &argp10,SWIGTYPE_p_int, 0 |  0 );
-  if (!SWIG_IsOK(res10)) {
-    SWIG_exception_fail(SWIG_ArgError(res10), "in method '" "rs_cf_splitting" "', argument " "10"" of type '" "int const []""'"); 
-  } 
-  arg10 = reinterpret_cast< int * >(argp10);
-  ecode11 = SWIG_AsVal_int(obj6, &val11);
-  if (!SWIG_IsOK(ecode11)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode11), "in method '" "rs_cf_splitting" "', argument " "11"" of type '" "int""'");
-  } 
-  arg11 = static_cast< int >(val11);
   {
-    array12 = obj_to_array_no_conversion(obj7, NPY_INT);
+    array10 = obj_to_array_no_conversion(obj5, NPY_INT);
+    if (!array10 || !require_dimensions(array10,1) || !require_contiguous(array10)
+      || !require_native(array10)) SWIG_fail;
+    arg10 = (int*) array_data(array10);
+    arg11 = 1;
+    for (i10=0; i10 < array_numdims(array10); ++i10) arg11 *= array_size(array10,i10);
+  }
+  {
+    array12 = obj_to_array_no_conversion(obj6, NPY_INT);
     if (!array12 || !require_dimensions(array12,1) || !require_contiguous(array12)
       || !require_native(array12)) SWIG_fail;
     arg12 = (int*) array_data(array12);
@@ -25488,18 +25482,15 @@ SWIGINTERN PyObject *_wrap_find_boundary_adjacent_points__SWIG_1(PyObject *SWIGU
   int i4 = 1 ;
   PyArrayObject *array6 = NULL ;
   int i6 = 1 ;
-  void *argp8 = 0 ;
-  int res8 = 0 ;
-  int val9 ;
-  int ecode9 = 0 ;
+  PyArrayObject *array8 = NULL ;
+  int i8 = 1 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
   PyObject * obj3 = 0 ;
   PyObject * obj4 = 0 ;
-  PyObject * obj5 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOO:find_boundary_adjacent_points",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOO:find_boundary_adjacent_points",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
   ecode1 = SWIG_AsVal_int(obj0, &val1);
   if (!SWIG_IsOK(ecode1)) {
     SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "find_boundary_adjacent_points" "', argument " "1"" of type '" "int""'");
@@ -25529,16 +25520,14 @@ SWIGINTERN PyObject *_wrap_find_boundary_adjacent_points__SWIG_1(PyObject *SWIGU
     arg7 = 1;
     for (i6=0; i6 < array_numdims(array6); ++i6) arg7 *= array_size(array6,i6);
   }
-  res8 = SWIG_ConvertPtr(obj4, &argp8,SWIGTYPE_p_int, 0 |  0 );
-  if (!SWIG_IsOK(res8)) {
-    SWIG_exception_fail(SWIG_ArgError(res8), "in method '" "find_boundary_adjacent_points" "', argument " "8"" of type '" "int []""'"); 
-  } 
-  arg8 = reinterpret_cast< int * >(argp8);
-  ecode9 = SWIG_AsVal_int(obj5, &val9);
-  if (!SWIG_IsOK(ecode9)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "find_boundary_adjacent_points" "', argument " "9"" of type '" "int""'");
-  } 
-  arg9 = static_cast< int >(val9);
+  {
+    array8 = obj_to_array_no_conversion(obj4, NPY_INT);
+    if (!array8 || !require_dimensions(array8,1) || !require_contiguous(array8)
+      || !require_native(array8)) SWIG_fail;
+    arg8 = (int*) array_data(array8);
+    arg9 = 1;
+    for (i8=0; i8 < array_numdims(array8); ++i8) arg9 *= array_size(array8,i8);
+  }
   find_boundary_adjacent_points< int,float >(arg1,(int const (*))arg2,arg3,(int const (*))arg4,arg5,(float const (*))arg6,arg7,arg8,arg9);
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -25566,18 +25555,15 @@ SWIGINTERN PyObject *_wrap_find_boundary_adjacent_points__SWIG_2(PyObject *SWIGU
   int i4 = 1 ;
   PyArrayObject *array6 = NULL ;
   int i6 = 1 ;
-  void *argp8 = 0 ;
-  int res8 = 0 ;
-  int val9 ;
-  int ecode9 = 0 ;
+  PyArrayObject *array8 = NULL ;
+  int i8 = 1 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
   PyObject * obj3 = 0 ;
   PyObject * obj4 = 0 ;
-  PyObject * obj5 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOO:find_boundary_adjacent_points",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOO:find_boundary_adjacent_points",&obj0,&obj1,&obj2,&obj3,&obj4)) SWIG_fail;
   ecode1 = SWIG_AsVal_int(obj0, &val1);
   if (!SWIG_IsOK(ecode1)) {
     SWIG_exception_fail(SWIG_ArgError(ecode1), "in method '" "find_boundary_adjacent_points" "', argument " "1"" of type '" "int""'");
@@ -25607,16 +25593,14 @@ SWIGINTERN PyObject *_wrap_find_boundary_adjacent_points__SWIG_2(PyObject *SWIGU
     arg7 = 1;
     for (i6=0; i6 < array_numdims(array6); ++i6) arg7 *= array_size(array6,i6);
   }
-  res8 = SWIG_ConvertPtr(obj4, &argp8,SWIGTYPE_p_int, 0 |  0 );
-  if (!SWIG_IsOK(res8)) {
-    SWIG_exception_fail(SWIG_ArgError(res8), "in method '" "find_boundary_adjacent_points" "', argument " "8"" of type '" "int []""'"); 
-  } 
-  arg8 = reinterpret_cast< int * >(argp8);
-  ecode9 = SWIG_AsVal_int(obj5, &val9);
-  if (!SWIG_IsOK(ecode9)) {
-    SWIG_exception_fail(SWIG_ArgError(ecode9), "in method '" "find_boundary_adjacent_points" "', argument " "9"" of type '" "int""'");
-  } 
-  arg9 = static_cast< int >(val9);
+  {
+    array8 = obj_to_array_no_conversion(obj4, NPY_INT);
+    if (!array8 || !require_dimensions(array8,1) || !require_contiguous(array8)
+      || !require_native(array8)) SWIG_fail;
+    arg8 = (int*) array_data(array8);
+    arg9 = 1;
+    for (i8=0; i8 < array_numdims(array8); ++i8) arg9 *= array_size(array8,i8);
+  }
   find_boundary_adjacent_points< int,double >(arg1,(int const (*))arg2,arg3,(int const (*))arg4,arg5,(double const (*))arg6,arg7,arg8,arg9);
   resultobj = SWIG_Py_Void();
   return resultobj;
@@ -25627,17 +25611,17 @@ fail:
 
 SWIGINTERN PyObject *_wrap_find_boundary_adjacent_points(PyObject *self, PyObject *args) {
   int argc;
-  PyObject *argv[7] = {
+  PyObject *argv[6] = {
     0
   };
   int ii;
   
   if (!PyTuple_Check(args)) SWIG_fail;
   argc = args ? (int)PyObject_Length(args) : 0;
-  for (ii = 0; (ii < 6) && (ii < argc); ii++) {
+  for (ii = 0; (ii < 5) && (ii < argc); ii++) {
     argv[ii] = PyTuple_GET_ITEM(args,ii);
   }
-  if (argc == 6) {
+  if (argc == 5) {
     int _v;
     {
       int res = SWIG_AsVal_int(argv[0], NULL);
@@ -25659,24 +25643,22 @@ SWIGINTERN PyObject *_wrap_find_boundary_adjacent_points(PyObject *self, PyObjec
               NPY_FLOAT);
           }
           if (_v) {
-            void *vptr = 0;
-            int res = SWIG_ConvertPtr(argv[4], &vptr, SWIGTYPE_p_int, 0);
-            _v = SWIG_CheckState(res);
+            {
+              _v = is_array(argv[4]) && PyArray_EquivTypenums(array_type(argv[4]),
+                NPY_INT);
+            }
             if (_v) {
-              {
-                int res = SWIG_AsVal_int(argv[5], NULL);
-                _v = SWIG_CheckState(res);
-              }
-              if (_v) {
+              if (argc <= 5) {
                 return _wrap_find_boundary_adjacent_points__SWIG_1(self, args);
               }
+              return _wrap_find_boundary_adjacent_points__SWIG_1(self, args);
             }
           }
         }
       }
     }
   }
-  if (argc == 6) {
+  if (argc == 5) {
     int _v;
     {
       int res = SWIG_AsVal_int(argv[0], NULL);
@@ -25698,17 +25680,15 @@ SWIGINTERN PyObject *_wrap_find_boundary_adjacent_points(PyObject *self, PyObjec
               NPY_DOUBLE);
           }
           if (_v) {
-            void *vptr = 0;
-            int res = SWIG_ConvertPtr(argv[4], &vptr, SWIGTYPE_p_int, 0);
-            _v = SWIG_CheckState(res);
+            {
+              _v = is_array(argv[4]) && PyArray_EquivTypenums(array_type(argv[4]),
+                NPY_INT);
+            }
             if (_v) {
-              {
-                int res = SWIG_AsVal_int(argv[5], NULL);
-                _v = SWIG_CheckState(res);
-              }
-              if (_v) {
+              if (argc <= 5) {
                 return _wrap_find_boundary_adjacent_points__SWIG_2(self, args);
               }
+              return _wrap_find_boundary_adjacent_points__SWIG_2(self, args);
             }
           }
         }
@@ -30936,10 +30916,10 @@ static PyMethodDef SwigMethods[] = {
 		"maximum_row_value(int const n_row, std::complex< float > [] x, int const [] Ap, int const [] Aj, std::complex< float > const [] Ax)\n"
 		"maximum_row_value(int const n_row, std::complex< double > [] x, int const [] Ap, int const [] Aj, std::complex< double > const [] Ax)\n"
 		""},
-	 { (char *)"rs_cf_splitting", _wrap_rs_cf_splitting, METH_VARARGS, (char *)"rs_cf_splitting(int const n_nodes, int const [] Sp, int const [] Sj, int const [] Tp, int const [] Tj, int const [] influence, int const influence_size, int [] splitting)"},
+	 { (char *)"rs_cf_splitting", _wrap_rs_cf_splitting, METH_VARARGS, (char *)"rs_cf_splitting(int const n_nodes, int const [] Sp, int const [] Sj, int const [] Tp, int const [] Tj, int const [] influence, int [] splitting)"},
 	 { (char *)"find_boundary_adjacent_points", _wrap_find_boundary_adjacent_points, METH_VARARGS, (char *)"\n"
-		"find_boundary_adjacent_points(int const n_nodes, int const [] Ap, int const [] Aj, float const [] Ax, int [] boundary_adjacent, int const boundary_adjacent_size)\n"
-		"find_boundary_adjacent_points(int const n_nodes, int const [] Ap, int const [] Aj, double const [] Ax, int [] boundary_adjacent, int const boundary_adjacent_size)\n"
+		"find_boundary_adjacent_points(int const n_nodes, int const [] Ap, int const [] Aj, float const [] Ax, int [] splitting)\n"
+		"find_boundary_adjacent_points(int const n_nodes, int const [] Ap, int const [] Aj, double const [] Ax, int [] splitting)\n"
 		""},
 	 { (char *)"shifted_2d_coarsening", _wrap_shifted_2d_coarsening, METH_VARARGS, (char *)"shifted_2d_coarsening(int const n_nodes, int const [] Sp, int [] splitting)"},
 	 { (char *)"cljp_naive_splitting", _wrap_cljp_naive_splitting, METH_VARARGS, (char *)"cljp_naive_splitting(int const n, int const [] Sp, int const [] Sj, int const [] Tp, int const [] Tj, int [] splitting, int const colorflag)"},
@@ -31000,7 +30980,6 @@ static PyMethodDef SwigMethods[] = {
 static swig_type_info _swigt__p_char = {"_p_char", "char *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_double = {"_p_double", "double *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_float = {"_p_float", "float *", 0, 0, (void*)0, 0};
-static swig_type_info _swigt__p_int = {"_p_int", "int *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__complexT_double_t = {"_p_std__complexT_double_t", "std::complex< double > *", 0, 0, (void*)0, 0};
 static swig_type_info _swigt__p_std__complexT_float_t = {"_p_std__complexT_float_t", "std::complex< float > *", 0, 0, (void*)0, 0};
 
@@ -31008,7 +30987,6 @@ static swig_type_info *swig_type_initial[] = {
   &_swigt__p_char,
   &_swigt__p_double,
   &_swigt__p_float,
-  &_swigt__p_int,
   &_swigt__p_std__complexT_double_t,
   &_swigt__p_std__complexT_float_t,
 };
@@ -31016,7 +30994,6 @@ static swig_type_info *swig_type_initial[] = {
 static swig_cast_info _swigc__p_char[] = {  {&_swigt__p_char, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_double[] = {  {&_swigt__p_double, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_float[] = {  {&_swigt__p_float, 0, 0, 0},{0, 0, 0, 0}};
-static swig_cast_info _swigc__p_int[] = {  {&_swigt__p_int, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__complexT_double_t[] = {  {&_swigt__p_std__complexT_double_t, 0, 0, 0},{0, 0, 0, 0}};
 static swig_cast_info _swigc__p_std__complexT_float_t[] = {  {&_swigt__p_std__complexT_float_t, 0, 0, 0},{0, 0, 0, 0}};
 
@@ -31024,7 +31001,6 @@ static swig_cast_info *swig_cast_initial[] = {
   _swigc__p_char,
   _swigc__p_double,
   _swigc__p_float,
-  _swigc__p_int,
   _swigc__p_std__complexT_double_t,
   _swigc__p_std__complexT_float_t,
 };

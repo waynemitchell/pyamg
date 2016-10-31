@@ -48,7 +48,8 @@
     (      ctype splitting [], const int splitting_size),
     (      ctype indices [], const int indices_size),
     (const ctype A_rowptr [], const int A_rowptr_size),
-    (const ctype A_colinds [], const int A_colinds_size)
+    (const ctype A_colinds [], const int A_colinds_size),
+    (const ctype influence [], const int influence_size)
 
 };
 %enddef

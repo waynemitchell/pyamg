@@ -464,14 +464,14 @@ def maximum_row_value(*args):
     """
     return _amg_core.maximum_row_value(*args)
 
-def rs_cf_splitting(n_nodes, Sp, Sj, Tp, Tj, influence, influence_size, splitting):
-    """rs_cf_splitting(int const n_nodes, int const [] Sp, int const [] Sj, int const [] Tp, int const [] Tj, int const [] influence, int const influence_size, int [] splitting)"""
-    return _amg_core.rs_cf_splitting(n_nodes, Sp, Sj, Tp, Tj, influence, influence_size, splitting)
+def rs_cf_splitting(n_nodes, Sp, Sj, Tp, Tj, influence, splitting):
+    """rs_cf_splitting(int const n_nodes, int const [] Sp, int const [] Sj, int const [] Tp, int const [] Tj, int const [] influence, int [] splitting)"""
+    return _amg_core.rs_cf_splitting(n_nodes, Sp, Sj, Tp, Tj, influence, splitting)
 
 def find_boundary_adjacent_points(*args):
     """
-    find_boundary_adjacent_points(int const n_nodes, int const [] Ap, int const [] Aj, float const [] Ax, int [] boundary_adjacent, int const boundary_adjacent_size)
-    find_boundary_adjacent_points(int const n_nodes, int const [] Ap, int const [] Aj, double const [] Ax, int [] boundary_adjacent, int const boundary_adjacent_size)
+    find_boundary_adjacent_points(int const n_nodes, int const [] Ap, int const [] Aj, float const [] Ax, int [] splitting)
+    find_boundary_adjacent_points(int const n_nodes, int const [] Ap, int const [] Aj, double const [] Ax, int [] splitting)
     """
     return _amg_core.find_boundary_adjacent_points(*args)
 

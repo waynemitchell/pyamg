@@ -109,9 +109,10 @@ __docformat__ = "restructuredtext en"
 def FindBoundaryAdjacentPoints(A):
     influence = np.empty(A.shape[0], dtype='intc')
     amg_core.find_boundary_adjacent_points(A.shape[0], A.indptr, A.indices, A.data, influence)
+
     return influence
 
-def RS(S, influence):
+def RS(S, influence=None):
     """Compute a C/F splitting using Ruge-Stuben coarsening
 
     Parameters

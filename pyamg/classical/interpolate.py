@@ -268,7 +268,7 @@ def boundary_clipped_interpolation(A, C, splitting):
     C = C.multiply(A)
 
     Pp = np.empty_like(A.indptr)
-    print "Going into c code for boundary clipped pass 1 interp"
+    # print "Going into c code for boundary clipped pass 1 interp"
 
     amg_core.rs_boundary_clipped_interpolation_pass1(A.shape[0],
                                            C.indptr, C.indices, splitting, Pp)
@@ -277,7 +277,7 @@ def boundary_clipped_interpolation(A, C, splitting):
     Pj = np.empty(nnz, dtype=Pp.dtype)
     Px = np.empty(nnz, dtype=A.dtype)
 
-    print "Going into c code for boundary clipped pass 2 interp"
+    # print "Going into c code for boundary clipped pass 2 interp"
     amg_core.rs_boundary_clipped_interpolation_pass2(A.shape[0],
                                            A.indptr, A.indices, A.data,
                                            C.indptr, C.indices, C.data,
