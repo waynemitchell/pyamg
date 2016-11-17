@@ -260,6 +260,9 @@ def boundary_clipped_interpolation(A, C, splitting):
     if not isspmatrix_csr(C):
         raise TypeError('expected csr_matrix for C')
 
+    # Make sure A doesn't have zero entries
+    A.eliminate_zeros()
+
     # Interpolation weights are computed based on entries in A, but subject to
     # the sparsity pattern of C.  So, copy the entries of A into the
     # sparsity pattern of C.

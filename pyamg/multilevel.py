@@ -595,6 +595,7 @@ class multilevel_solver:
             if (i != len(self.levels) - 1):
                 P = self.levels[i].P
                 R = self.levels[i].R
+                S = self.levels[i].C
             if (fmt == 'csr'):
                 filename = directory + '/A' + str(i) + '_indptr.txt'
                 np.savetxt(filename, A.indptr, fmt='%d')
@@ -615,6 +616,12 @@ class multilevel_solver:
                     np.savetxt(filename, R.indices, fmt='%d')
                     filename = directory + '/R' + str(i) + '_data.txt'
                     np.savetxt(filename, R.data)
+                    filename = directory + '/S' + str(i) + '_indptr.txt'
+                    np.savetxt(filename, S.indptr, fmt='%d')
+                    filename = directory + '/S' + str(i) + '_indices.txt'
+                    np.savetxt(filename, S.indices, fmt='%d')
+                    filename = directory + '/S' + str(i) + '_data.txt'
+                    np.savetxt(filename, S.data)
             elif (fmt == 'coo'):
                 filename = directory + '/A' + str(i) + '_row.txt'
                 np.savetxt(filename, (A.tocoo()).row, fmt='%d')
@@ -635,6 +642,12 @@ class multilevel_solver:
                     np.savetxt(filename, (R.tocoo()).col, fmt='%d')
                     filename = directory + '/R' + str(i) + '_data.txt'
                     np.savetxt(filename, (R.tocoo()).data)
+                    filename = directory + '/S' + str(i) + '_row.txt'
+                    np.savetxt(filename, (S.tocoo()).row, fmt='%d')
+                    filename = directory + '/S' + str(i) + '_col.txt'
+                    np.savetxt(filename, (S.tocoo()).col, fmt='%d')
+                    filename = directory + '/S' + str(i) + '_data.txt'
+                    np.savetxt(filename, (S.tocoo()).data)
             elif (fmt == 'dense'):
                 filename = directory + '/A' + str(i) + '_dense.txt'
                 np.savetxt(filename, A.todense())
@@ -643,6 +656,8 @@ class multilevel_solver:
                     np.savetxt(filename, P.todense())
                     filename = directory + '/R' + str(i) + '_dense.txt'
                     np.savetxt(filename, R.todense())
+                    filename = directory + '/S' + str(i) + '_dense.txt'
+                    np.savetxt(filename, S.todense())
 
 
 def coarse_grid_solver(solver):

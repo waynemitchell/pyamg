@@ -165,6 +165,7 @@ void rs_cf_splitting(const I n_nodes,
                      const I influence[], const int influence_size,
                            I splitting[], const int splitting_size)
 {
+  // printf("Entered CF splitting\n");
     std::vector<I> lambda(n_nodes,0);
 
     //compute lambdas
@@ -187,6 +188,7 @@ void rs_cf_splitting(const I n_nodes,
     // node to index - the index of a given node
     lambda_max = lambda_max*2;
     if (n_nodes+1 > lambda_max) lambda_max = n_nodes+1;
+    // printf("lambda_max = %d\n", lambda_max);
     std::vector<I> interval_ptr(lambda_max,0);
     std::vector<I> interval_count(lambda_max,0);
     std::vector<I> index_to_node(n_nodes);
@@ -202,6 +204,7 @@ void rs_cf_splitting(const I n_nodes,
     }
     for(I i = 0; i < n_nodes; i++){
         I lambda_i = lambda[i];
+        // printf("lambda_i = %d, lambda_max = %d\n", lambda_i, lambda_max);
         I index    = interval_ptr[lambda_i] + interval_count[lambda_i];
         index_to_node[index] = i;
         node_to_index[i]     = index;
@@ -210,6 +213,7 @@ void rs_cf_splitting(const I n_nodes,
 
 
     std::fill(splitting, splitting + n_nodes, U_NODE);
+    // printf("Did the fill\n");
 
     // all nodes with no neighbors become F nodes
     for(I i = 0; i < n_nodes; i++){
@@ -222,6 +226,7 @@ void rs_cf_splitting(const I n_nodes,
     for(I top_index = n_nodes - 1; top_index != -1; top_index--){
         I i        = index_to_node[top_index];
         I lambda_i = lambda[i];
+        // printf("lambda_i = %d, lambda_max = %d\n", lambda_i, lambda_max);
 
         // if (i == 73)
         // {
@@ -296,6 +301,7 @@ void rs_cf_splitting(const I n_nodes,
                             // assert(lambda[k] < n_nodes - 1);//this would cause problems!
 
                             I lambda_k = lambda[k];
+                            // printf("lambda_k = %d, lambda_max = %d\n", lambda_k, lambda_max);
                             I old_pos  = node_to_index[k];
                             I new_pos  = interval_ptr[lambda_k] + interval_count[lambda_k] - 1;
 
@@ -333,6 +339,7 @@ void rs_cf_splitting(const I n_nodes,
 
                     //move j to the beginning of its current interval
                     I lambda_j = lambda[j];
+                    // printf("lambda_j = %d, lambda_max = %d\n", lambda_j, lambda_max);
                     I old_pos  = node_to_index[j];
                     I new_pos  = interval_ptr[lambda_j];
 
@@ -353,6 +360,7 @@ void rs_cf_splitting(const I n_nodes,
             }
         }
     }
+  // printf("Leaving CF splitting\n");
 }
 
 
@@ -370,9 +378,9 @@ void find_boundary_adjacent_points(const I n_nodes,
         for(I j = Ap[i]; j < Ap[i+1]; j++)
         {
           row_sum += Ax[j];
-          // printf("     Ax[%d] = %f\n", j, Ax[j]);
+          // printf("     Ax[%d] = %e\n", j, Ax[j]);
         }
-        // printf("  row_sum = %f\n", row_sum);
+        // printf("  row_sum = %e\n", row_sum);
         if ( std::abs(row_sum) > 0.00001 && Ap[i+1] - Ap[i] > 1)
         {
             splitting[i] = 1;
@@ -811,7 +819,7 @@ void rs_standard_interpolation_pass2(const I n_nodes,
                     // printf("Weight i = %d, j = %d\n", i, j);
                     // Initialize numerator as a_ij
                     T numerator = Sx[jj];
-                    // printf("  numerator initialized to %f\n", numerator);
+                    // printf("  numerator initialized to %e\n", numerator);
                     // Sum over strongly connected fine points
                     for(I kk = Sp[i]; kk < Sp[i+1]; kk++){
                         if ( (splitting[Sj[kk]] == F_NODE) && (Sj[kk] != i) ){
@@ -855,7 +863,7 @@ void rs_standard_interpolation_pass2(const I n_nodes,
                         }
                     }
                     // Set w_ij = -numerator/denominator
-                    // printf("  numerator = %f, denominator = %f\n", numerator, denominator);
+                    // printf("  numerator = %e, denominator = %e\n", numerator, denominator);
                     if (denominator == 0) printf("Outer denominator was zero: diagonal plus sum of weak connections was zero\n");
                     Bx[nnz] = -numerator/denominator;
                     nnz++;
@@ -958,7 +966,7 @@ void rs_boundary_smoothing_interpolation_pass2(const I n_nodes,
                     // printf("Weight i = %d, j = %d\n", i, j);
                     // Initialize numerator as a_ij
                     T numerator = Sx[jj];
-                    // printf("  numerator initialized to %f\n", numerator);
+                    // printf("  numerator initialized to %e\n", numerator);
                     // Sum over strongly connected fine points
                     for(I kk = Sp[i]; kk < Sp[i+1]; kk++){
                         if ( (splitting[Sj[kk]] == F_NODE) && (Sj[kk] != i) ){
@@ -979,20 +987,20 @@ void rs_boundary_smoothing_interpolation_pass2(const I n_nodes,
                                     }
                                 }
                             }
-                            // printf("    inner_denominator = %f\n", i, inner_denominator);
+                            // printf("    inner_denominator = %e\n", i, inner_denominator);
                             // Add a_ik*a_kj/inner_denominator to the numerator (have to search over k'th row in A for connection a_kj)
                             if (boundary_flag) x = X[k];
                             else x = 1.0;
                             for(I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++){
                                 if ( Aj[search_ind] == j ){
                                     numerator += x*Sx[kk]*Ax[search_ind]/inner_denominator;
-                                    // printf("    a_ik = %f, a_kj = %f\n", Sx[kk], Ax[search_ind]);
+                                    // printf("    a_ik = %e, a_kj = %e\n", Sx[kk], Ax[search_ind]);
                                 }
                             }
                         }
                     }
                     // Set w_ij = -numerator/denominator
-                    // printf("  numerator = %f, denominator = %f\n", numerator, denominator);
+                    // printf("  numerator = %e, denominator = %e\n", numerator, denominator);
                     Bx[nnz] = -numerator/denominator;
 
 
@@ -1081,20 +1089,22 @@ void rs_boundary_clipped_interpolation_pass2(const I n_nodes,
             Bj[Bp[i]] = i;
             Bx[Bp[i]] = 1;
         } 
-        // Otherwise, use RS standard interpolation formula, clipping boundary connections and using linear interpolation at boundaries
+        // Otherwise, use RS standard interpolation formula, using linear interpolation at boundaries
         else {
 
             I nnz = Bp[i];
-            if(boundary_flag[i]){ // If this is a boundary-adjacent node, do linear interpolation from neighbors
+            if(boundary_flag[i]){ // If this is a boundary-adjacent node, do linear interpolation from neighbors (average contributions from connected boundary adjacent points weighted by strenght of connection)
+                T normalization = 0.0;
+                for(I jj = Sp[i]; jj < Sp[i+1]; jj++) if ( (splitting[Sj[jj]] == C_NODE) && (Sj[jj] != i) && boundary_flag[Sj[jj]] ) normalization += Sx[jj];
                 for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
                     if ( (splitting[Sj[jj]] == C_NODE) && (Sj[jj] != i) ){
                         Bj[nnz] = Sj[jj];
                         if(boundary_flag[Sj[jj]]){
-                            // printf("Bx[%d] = %f, Bx_size = %d\n", nnz, 0.5, Bx_size);
-                            Bx[nnz] = 0.5;
+                            // printf("Bx[%d] = %e, normalization = %e\n", nnz, Sx[jj] / normalization, normalization);
+                            Bx[nnz] = Sx[jj] / normalization;
                         }
                         else{
-                            // printf("Bx[%d] = %f, Bx_size = %d\n", nnz, 0.0, Bx_size);
+                            // printf("Bx[%d] = %e\n", nnz, 0.0);
                             Bx[nnz] = 0.0;
                         }
                     nnz++;
@@ -1106,73 +1116,59 @@ void rs_boundary_clipped_interpolation_pass2(const I n_nodes,
                 // Calculate denominator
                 T denominator = 0;
                 // Start by summing entire row of A
-                for(I mm = Ap[i]; mm < Ap[i+1]; mm++) if(!boundary_flag[Aj[mm]]) denominator += Ax[mm]; // Boundary-adjacent points and interior points shoulnd't talk to eachother
+                for(I mm = Ap[i]; mm < Ap[i+1]; mm++) denominator += Ax[mm];
                 // Then subtract off the strong connections so that you are left with 
                 // denominator = a_ii + sum_{m in weak connections} a_im
                 for(I mm = Sp[i]; mm < Sp[i+1]; mm++){
-                    if ( Sj[mm] != i && !boundary_flag[Sj[mm]]) denominator -= Sx[mm]; // making sure to leave the diagonal entry in there
+                    if ( Sj[mm] != i ) denominator -= Sx[mm]; // making sure to leave the diagonal entry in there
                 }
 
                 // Set entries in P (interpolation weights w_ij from strongly connected C-points)
                 for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
                     if ( (splitting[Sj[jj]] == C_NODE) && (Sj[jj] != i) ){
-                        if (boundary_flag[Sj[jj]]){
-                            Bj[nnz] = Sj[jj];
-                            // I j = Sj[jj];
-                            // printf("Weight i = %d, j = %d\n", i, j);
-                            // printf("Bx[%d] = %f, Bx_size = %d\n", nnz, 0.0, Bx_size);
-                            Bx[nnz] = 0.0;
-                            nnz++;
-                            }
-                        else{
-                            
-                            // Set temporary value for Bj to be mapped to appropriate coarse-grid column index later and get column index j
-                            Bj[nnz] = Sj[jj];
-                            I j = Sj[jj];
-                            // printf("Weight i = %d, j = %d\n", i, j);
-                            // Initialize numerator as a_ij
-                            T numerator = Sx[jj];
-                            // printf("  numerator initialized to %f\n", numerator);
-                            // Sum over strongly connected fine points
-                            for(I kk = Sp[i]; kk < Sp[i+1]; kk++){
-                                if ( (splitting[Sj[kk]] == F_NODE) && (Sj[kk] != i) && !boundary_flag[Sj[kk]]){ // Only add contributions from fine, strongly connected, interior points
-                                    // Get column index k
-                                    I k = Sj[kk];
-                                    // printf("  top sum k = %d\n", k);
-                                    // Calculate sum for inner denominator (loop over strongly connected C-points)
-                                    T inner_denominator = 0;
-                                    for(I ll = Sp[i]; ll < Sp[i+1]; ll++){
-                                        if ( (splitting[Sj[ll]] == C_NODE) && (Sj[ll] != i) && !boundary_flag[Sj[ll]] ){ // Inner denominator sum thus only sweeps over interior points
-                                            // Get column index l
-                                            I l = Sj[ll];
-                                            // Add connection a_kl if present in matrix (search over kth row in A for connection)
-                                            for(I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++){
-                                                if ( Aj[search_ind] == l ) inner_denominator += Ax[search_ind];
-                                            }
-                                        }
-                                    }
-                                    // printf("    inner_denominator = %f\n", i, inner_denominator);
-                                    // Add a_ik*a_kj/inner_denominator to the numerator (have to search over k'th row in A for connection a_kj)
-                                    for(I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++){
-                                        if ( Aj[search_ind] == j ){
-                                            numerator += Sx[kk]*Ax[search_ind]/inner_denominator;
-                                            // printf("    a_ik = %f, a_kj = %f\n", Sx[kk], Ax[search_ind]);
+                        
+                        // Set temporary value for Bj to be mapped to appropriate coarse-grid column index later and get column index j
+                        Bj[nnz] = Sj[jj];
+                        I j = Sj[jj];
+                        // printf("Weight i = %d, j = %d\n", i, j);
+                        // Initialize numerator as a_ij
+                        T numerator = Sx[jj];
+                        // printf("  numerator initialized to %e\n", numerator);
+                        // Sum over strongly connected fine points
+                        for(I kk = Sp[i]; kk < Sp[i+1]; kk++){
+                            if ( (splitting[Sj[kk]] == F_NODE) && (Sj[kk] != i) ){ 
+                                // Get column index k
+                                I k = Sj[kk];
+                                // printf("  top sum k = %d\n", k);
+                                // Calculate sum for inner denominator (loop over strongly connected C-points)
+                                T inner_denominator = 0;
+                                for(I ll = Sp[i]; ll < Sp[i+1]; ll++){
+                                    if ( (splitting[Sj[ll]] == C_NODE) && (Sj[ll] != i) ){
+                                        // Get column index l
+                                        I l = Sj[ll];
+                                        // Add connection a_kl if present in matrix (search over kth row in A for connection)
+                                        for(I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++){
+                                            if ( Aj[search_ind] == l ) inner_denominator += Ax[search_ind];
                                         }
                                     }
                                 }
+                                // Add a_ik*a_kj/inner_denominator to the numerator (have to search over k'th row in A for connection a_kj)
+                                for(I search_ind = Ap[k]; search_ind < Ap[k+1]; search_ind++){
+                                    if ( Aj[search_ind] == j ){
+                                        // printf("    inner_denominator = %e\n", i, inner_denominator);
+                                        numerator += Sx[kk]*Ax[search_ind]/inner_denominator;
+                                        // printf("    a_ik = %e, a_kj = %e\n", Sx[kk], Ax[search_ind]);
+                                    }
+                                }
                             }
-                            // Set w_ij = -numerator/denominator
-                            // printf("  numerator = %f, denominator = %f\n", numerator, denominator);
-                            // printf("Bx[%d] = %f, Bx_size = %d\n", nnz, -numerator/denominator, Bx_size);
-                            Bx[nnz] = -numerator/denominator;
-
-
-
-                            // if (boundary_flag) Bx[nnz] = 1.0/(Bp[i+1] - Bp[i]);
-
-
-                            nnz++;
                         }
+                        // Set w_ij = -numerator/denominator
+                        // printf("  numerator = %e, denominator = %e\n", numerator, denominator);
+                        // printf("Bx[%d] = %e, Bx_size = %d\n", nnz, -numerator/denominator, Bx_size);
+                        Bx[nnz] = -numerator/denominator;
+
+                        nnz++;
+                        
                     }
                 }
             }

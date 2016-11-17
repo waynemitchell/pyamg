@@ -248,7 +248,9 @@ def extend_hierarchy(levels, strength, CF, interp, keep):
     levels[-1].A = A
 
     if (influence != None):
-        levels[-1].influence = (R*influence).astype('intc')
+        I = (R==1).astype('intc')
+        levels[-1].influence = I*influence
+        # print influence
 
     else:
         levels[-1].influence = None
