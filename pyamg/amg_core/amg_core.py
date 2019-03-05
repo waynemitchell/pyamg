@@ -464,9 +464,9 @@ def maximum_row_value(*args):
     """
     return _amg_core.maximum_row_value(*args)
 
-def rs_cf_splitting(n_nodes, Sp, Sj, Tp, Tj, influence, splitting):
-    """rs_cf_splitting(int const n_nodes, int const [] Sp, int const [] Sj, int const [] Tp, int const [] Tj, int const [] influence, int [] splitting)"""
-    return _amg_core.rs_cf_splitting(n_nodes, Sp, Sj, Tp, Tj, influence, splitting)
+def rs_cf_splitting(n_nodes, Sp, Sj, Tp, Tj, influence, splitting, ordering):
+    """rs_cf_splitting(int const n_nodes, int const [] Sp, int const [] Sj, int const [] Tp, int const [] Tj, int const [] influence, int [] splitting, int const ordering)"""
+    return _amg_core.rs_cf_splitting(n_nodes, Sp, Sj, Tp, Tj, influence, splitting, ordering)
 
 def find_boundary_adjacent_points(*args):
     """

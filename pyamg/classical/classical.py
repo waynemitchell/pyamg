@@ -25,6 +25,7 @@ def ruge_stuben_solver(A,
                        strength=('classical', {'theta': 0.25 ,'do_amalgamation': False}),
                        CF='RS',
                        influence=None,
+                       ordering=1,
                        interp='standard',
                        presmoother=('gauss_seidel', {'sweep': 'symmetric'}),
                        postsmoother=('gauss_seidel', {'sweep': 'symmetric'}),
@@ -47,6 +48,7 @@ def ruge_stuben_solver(A,
     influence: {np array size of num dofs} : default is None
         If set, this adds influence to the lambda values of points for RS coarsening
         This makes points with high influence values more likely to become C points
+    ordering: 0 means that RS splitting will be unordered, 1 means it will be ordered (such that it gives geometric coarsening for Poisson on a regular square grid)
     presmoother : {string or dict}
         Method used for presmoothing at each level.  Method-specific parameters
         may be passed in using a tuple, e.g.
@@ -128,7 +130,7 @@ def ruge_stuben_solver(A,
 
     while len(levels) < max_levels and levels[-1].A.shape[0] > max_coarse:
         # print "Level ", len(levels) - 1
-        extend_hierarchy(levels, strength, CF, interp, keep)
+        extend_hierarchy(levels, strength, CF, interp, keep, ordering)
 
     ml = multilevel_solver(levels, **kwargs)
     change_smoothers(ml, presmoother, postsmoother)
@@ -136,7 +138,7 @@ def ruge_stuben_solver(A,
 
 
 # internal function
-def extend_hierarchy(levels, strength, CF, interp, keep):
+def extend_hierarchy(levels, strength, CF, interp, keep, ordering):
     """ helper function for local methods """
     def unpack_arg(v):
         if isinstance(v, tuple):
@@ -189,7 +191,7 @@ def extend_hierarchy(levels, strength, CF, interp, keep):
         # print "compute C/F splitting"
         fn, kwargs = unpack_arg(CF)
         if fn == 'RS':
-            splitting.append( split.RS(C_diag[-1],influence) )
+            splitting.append( split.RS(C_diag[-1],influence,ordering) )
         elif fn == 'PMIS':
             splitting.append( split.PMIS(C_diag[-1]) )
         elif fn == 'PMISc':

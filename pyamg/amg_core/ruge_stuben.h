@@ -163,7 +163,8 @@ void rs_cf_splitting(const I n_nodes,
                      const I Tp[], const int Tp_size,
                      const I Tj[], const int Tj_size,
                      const I influence[], const int influence_size,
-                           I splitting[], const int splitting_size)
+                           I splitting[], const int splitting_size,
+                     const I ordering)
 {
   // printf("Entered CF splitting\n");
     std::vector<I> lambda(n_nodes,0);
@@ -246,7 +247,7 @@ void rs_cf_splitting(const I n_nodes,
             // std::cout << "Fine node #" << i << " with lambda " << lambda[i] << std::endl;
             continue;
         }
-        else
+        else if (ordering)
         {
             assert(splitting[i] == U_NODE);
 
@@ -356,6 +357,80 @@ void rs_cf_splitting(const I n_nodes,
                     //decrement lambda_j
                     lambda[j]--;
                     // std::cout << "    decrement node #" << j << " to lambda " << lambda[j] << std::endl;
+                }
+            }
+        }
+        else
+        {
+            assert(splitting[i] == U_NODE);
+
+            splitting[i] = C_NODE;
+
+            //For each j in S^T_i /\ U
+            for(I jj = Tp[i]; jj < Tp[i+1]; jj++){
+                I j = Tj[jj];
+
+                if(splitting[j] == U_NODE){
+                    splitting[j] = F_NODE;
+
+                    //For each k in S_j /\ U
+                    for(I kk = Sp[j]; kk < Sp[j+1]; kk++){
+                        I k = Sj[kk];
+
+                        if(splitting[k] == U_NODE){
+                            //move k to the end of its current interval
+                            if(lambda[k] >= n_nodes - 1) continue;
+
+                            // TODO make this robust
+                            //if(lambda[k] >= n_nodes -1)
+                            //    std::cout << std::endl << "lambda[" << k << "]=" << lambda[k] << " n_nodes=" << n_nodes << std::endl;
+                            //assert(lambda[k] < n_nodes - 1);//this would cause problems!
+
+                            I lambda_k = lambda[k];
+                            I old_pos  = node_to_index[k];
+                            I new_pos  = interval_ptr[lambda_k] + interval_count[lambda_k] - 1;
+
+                            node_to_index[index_to_node[old_pos]] = new_pos;
+                            node_to_index[index_to_node[new_pos]] = old_pos;
+                            std::swap(index_to_node[old_pos], index_to_node[new_pos]);
+
+                            //update intervals
+                            interval_count[lambda_k]   -= 1;
+                            interval_count[lambda_k+1] += 1; //invalid write!
+                            interval_ptr[lambda_k+1]    = new_pos;
+
+                            //increment lambda_k
+                            lambda[k]++;
+                        }
+                    }
+                }
+            }
+
+            //For each j in S_i /\ U
+            for(I jj = Sp[i]; jj < Sp[i+1]; jj++){
+                I j = Sj[jj];
+                if(splitting[j] == U_NODE){            //decrement lambda for node j
+                    if(lambda[j] == 0) continue;
+
+                    //assert(lambda[j] > 0);//this would cause problems!
+
+                    //move j to the beginning of its current interval
+                    I lambda_j = lambda[j];
+                    I old_pos  = node_to_index[j];
+                    I new_pos  = interval_ptr[lambda_j];
+
+                    node_to_index[index_to_node[old_pos]] = new_pos;
+                    node_to_index[index_to_node[new_pos]] = old_pos;
+                    std::swap(index_to_node[old_pos],index_to_node[new_pos]);
+
+                    //update intervals
+                    interval_count[lambda_j]   -= 1;
+                    interval_count[lambda_j-1] += 1;
+                    interval_ptr[lambda_j]     += 1;
+                    interval_ptr[lambda_j-1]    = interval_ptr[lambda_j] - interval_count[lambda_j-1];
+
+                    //decrement lambda_j
+                    lambda[j]--;
                 }
             }
         }

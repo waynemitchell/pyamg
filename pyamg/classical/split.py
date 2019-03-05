@@ -112,7 +112,7 @@ def FindBoundaryAdjacentPoints(A):
 
     return influence
 
-def RS(S, influence=None):
+def RS(S, influence=None, ordering = 1):
     """Compute a C/F splitting using Ruge-Stuben coarsening
 
     Parameters
@@ -160,7 +160,8 @@ def RS(S, influence=None):
                              S.indptr, S.indices,
                              T.indptr, T.indices,
                              influence,
-                             splitting)
+                             splitting,
+                             ordering) 
 
     return splitting
 
